@@ -53,7 +53,9 @@ export default function Media() {
 
   return (
     <div>
-      <h2>Media</h2>
+      <p style={{ opacity: 0.7, marginBottom: 12 }}>
+        Books, films, shows, music.
+      </p>
 
       <div style={{ marginBottom: 16 }}>
         <input

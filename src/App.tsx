@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabaseClient";
+import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
-import Notes from "./pages/Notes";
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
@@ -22,5 +22,5 @@ export default function App() {
 
   if (!user) return <Auth />;
 
-  return <Notes />;
+return <Dashboard />;
 }

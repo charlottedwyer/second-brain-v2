@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+import QuickCapture from "./QuickCapture";
 import Today from "./Today";
 import Notes from "./Notes";
 import Notebooks from "./Notebooks";
@@ -55,6 +56,12 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
         }}
       >
         {/* LEFT COLUMN — THINKING */}
+        <div className="card">
+  <div className="card-body">
+    <QuickCapture />
+  </div>
+</div>
+
         <div className="card">
   <div className="card-header">
     <h2>Today</h2>

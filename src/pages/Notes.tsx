@@ -14,44 +14,43 @@ export default function Notes() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   async function loadNotes() {
-    const { data } = await supabase
-  .from("notes")
-  .select("id, title, content")
-  .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("notes")
+      .select("id, title, content")
+      .order("created_at", { ascending: false });
+
+    if (error) return;
 
     setNotes(data ?? []);
   }
 
   async function createNote() {
-  if (!title.trim()) return;
+    if (!title.trim()) return;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) return;
+    if (!user) return;
 
-  const { data, error } = await supabase
-    .from("notes")
-    .insert({
-      title,
-      content,
-      user_id: user.id,
-    })
-    .select()
-    .single();
+    const { data, error } = await supabase
+      .from("notes")
+      .insert({
+        title,
+        content,
+        user_id: user.id,
+      })
+      .select("id, title, content")
+      .single();
 
-  if (error) {
-    console.error(error);
-    return;
+    if (error || !data) return;
+
+    setNotes((prev) => [data, ...prev]);
+    setTitle("");
+    setContent("");
   }
 
-  setNotes((prev) => [data, ...prev]);
-  setTitle("");
-  setContent("");
-}
-
-  async function startEdit(note: Note) {
+  function startEdit(note: Note) {
     setEditingId(note.id);
     setTitle(note.title);
     setContent(note.content);
@@ -60,20 +59,29 @@ export default function Notes() {
   async function saveEdit() {
     if (!editingId) return;
 
-    await supabase
+    const { data, error } = await supabase
       .from("notes")
       .update({ title, content })
-      .eq("id", editingId);
+      .eq("id", editingId)
+      .select("id, title, content")
+      .single();
+
+    if (error || !data) return;
+
+    setNotes((prev) =>
+      prev.map((note) => (note.id === editingId ? data : note))
+    );
 
     setEditingId(null);
     setTitle("");
     setContent("");
-    loadNotes();
   }
 
   async function deleteNote(id: string) {
-    await supabase.from("notes").delete().eq("id", id);
-    loadNotes();
+    const { error } = await supabase.from("notes").delete().eq("id", id);
+    if (error) return;
+
+    setNotes((prev) => prev.filter((note) => note.id !== id));
   }
 
   useEffect(() => {
@@ -88,12 +96,15 @@ export default function Notes() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+
         <br />
+
         <textarea
           placeholder="Write something…"
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
+
         <br />
 
         {editingId ? (

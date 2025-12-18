@@ -10,8 +10,10 @@ type WikiPage = {
 export default function Wiki() {
   const [pages, setPages] = useState<WikiPage[]>([]);
   const [selected, setSelected] = useState<WikiPage | null>(null);
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [editing, setEditing] = useState(false);
 
   async function loadPages() {
     const { data, error } = await supabase
@@ -49,20 +51,108 @@ export default function Wiki() {
     setContent("");
   }
 
+  function openPage(page: WikiPage) {
+    setSelected(page);
+    setTitle(page.title);
+    setContent(page.content);
+    setEditing(false);
+  }
+
+  async function saveEdit() {
+    if (!selected) return;
+
+    const { data, error } = await supabase
+      .from("wiki_pages")
+      .update({ title, content })
+      .eq("id", selected.id)
+      .select("id, title, content")
+      .single();
+
+    if (error || !data) return;
+
+    setPages((prev) =>
+      prev.map((p) => (p.id === data.id ? data : p))
+    );
+
+    setSelected(data);
+    setEditing(false);
+  }
+
+  async function deletePage() {
+    if (!selected) return;
+
+    await supabase.from("wiki_pages").delete().eq("id", selected.id);
+
+    setPages((prev) => prev.filter((p) => p.id !== selected.id));
+    setSelected(null);
+    setTitle("");
+    setContent("");
+    setEditing(false);
+  }
+
   useEffect(() => {
     loadPages();
   }, []);
 
-  if (selected) {
+  /* ======================
+     VIEW MODE
+     ====================== */
+
+  if (selected && !editing) {
     return (
       <div>
         <button onClick={() => setSelected(null)}>← Back</button>
 
         <h3 style={{ marginTop: 12 }}>{selected.title}</h3>
-        <p style={{ whiteSpace: "pre-wrap" }}>{selected.content}</p>
+
+        <p style={{ whiteSpace: "pre-wrap" }}>
+          {selected.content}
+        </p>
+
+        <div style={{ marginTop: 16 }}>
+          <button onClick={() => setEditing(true)}>Edit</button>
+          <button onClick={deletePage} style={{ marginLeft: 8 }}>
+            Delete
+          </button>
+        </div>
       </div>
     );
   }
+
+  /* ======================
+     EDIT MODE
+     ====================== */
+
+  if (selected && editing) {
+    return (
+      <div>
+        <button onClick={() => setEditing(false)}>← Cancel</button>
+
+        <div style={{ marginTop: 12 }}>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+
+          <br />
+
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={6}
+          />
+
+          <br />
+
+          <button onClick={saveEdit}>Save</button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ======================
+     LIST + CREATE
+     ====================== */
 
   return (
     <div>
@@ -94,7 +184,7 @@ export default function Wiki() {
       <ul>
         {pages.map((page) => (
           <li key={page.id}>
-            <button onClick={() => setSelected(page)}>
+            <button onClick={() => openPage(page)}>
               {page.title}
             </button>
           </li>

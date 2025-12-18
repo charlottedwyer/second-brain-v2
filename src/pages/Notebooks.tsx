@@ -7,8 +7,10 @@ type Notebook = {
 };
 
 export default function Notebooks({
+  activeNotebook,
   onSelect,
 }: {
+  activeNotebook: string | null;
   onSelect: (id: string | null) => void;
 }) {
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
@@ -35,10 +37,7 @@ export default function Notebooks({
 
     const { data } = await supabase
       .from("notebooks")
-      .insert({
-        name,
-        user_id: user.id,
-      })
+      .insert({ name, user_id: user.id })
       .select()
       .single();
 
@@ -93,7 +92,12 @@ export default function Notebooks({
 
       <ul>
         <li>
-          <button onClick={() => onSelect(null)}>
+          <button
+            onClick={() => onSelect(null)}
+            style={{
+              fontWeight: activeNotebook === null ? "bold" : "normal",
+            }}
+          >
             All notes
           </button>
         </li>
@@ -108,15 +112,19 @@ export default function Notebooks({
                     setEditingName(e.target.value)
                   }
                 />
-                <button
-                  onClick={() => renameNotebook(nb.id)}
-                >
+                <button onClick={() => renameNotebook(nb.id)}>
                   Save
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => onSelect(nb.id)}>
+                <button
+                  onClick={() => onSelect(nb.id)}
+                  style={{
+                    fontWeight:
+                      activeNotebook === nb.id ? "bold" : "normal",
+                  }}
+                >
                   {nb.name}
                 </button>
                 <button

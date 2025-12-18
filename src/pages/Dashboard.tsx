@@ -40,12 +40,17 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
         </div>
       </header>
 
+      {/* NOTES + NOTEBOOKS */}
       <div className="card">
         <div className="card-header">
           <h2>Notes</h2>
         </div>
         <div className="card-body">
-          <Notebooks onSelect={setActiveNotebook} />
+          <Notebooks
+            activeNotebook={activeNotebook}
+            onSelect={setActiveNotebook}
+          />
+
           <Notes notebookId={activeNotebook} />
         </div>
       </div>

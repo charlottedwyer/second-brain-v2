@@ -14,6 +14,11 @@ type Notebook = {
   name: string;
 };
 
+type Tag = {
+  id: string;
+  name: string;
+};
+
 export default function Notes({
   notebookId,
 }: {
@@ -21,6 +26,10 @@ export default function Notes({
 }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [noteTags, setNoteTags] = useState<Record<string, Tag[]>>({});
+  const [filterTag, setFilterTag] = useState<Tag | null>(null);
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -30,17 +39,24 @@ export default function Notes({
     const { data } = await supabase
       .from("notebooks")
       .select("id, name")
-      .order("created_at", { ascending: true });
+      .order("created_at");
 
     setNotebooks(data ?? []);
+  }
+
+  async function loadTags() {
+    const { data } = await supabase
+      .from("tags")
+      .select("id, name")
+      .order("name");
+
+    setTags(data ?? []);
   }
 
   async function loadNotes() {
     let query = supabase
       .from("notes")
-      .select(
-        "id, title, content, notebook_id, archived"
-      )
+      .select("id, title, content, notebook_id, archived")
       .eq("archived", showArchive)
       .order("created_at", { ascending: false });
 
@@ -49,12 +65,31 @@ export default function Notes({
     }
 
     const { data } = await query;
-    setNotes(data ?? []);
+    const notesData = data ?? [];
+    setNotes(notesData);
+
+    // Load tags per note
+    if (notesData.length > 0) {
+      const ids = notesData.map((n) => n.id);
+      const { data: joins } = await supabase
+        .from("note_tags")
+        .select("note_id, tags(id, name)")
+        .in("note_id", ids);
+
+      const map: Record<string, Tag[]> = {};
+      joins?.forEach((j: any) => {
+        if (!map[j.note_id]) map[j.note_id] = [];
+        map[j.note_id].push(j.tags);
+      });
+
+      setNoteTags(map);
+    } else {
+      setNoteTags({});
+    }
   }
 
   async function createNote() {
     if (!title.trim()) return;
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -78,94 +113,87 @@ export default function Notes({
     setContent("");
   }
 
-  function startEdit(note: Note) {
-    setEditingId(note.id);
-    setTitle(note.title);
-    setContent(note.content);
-  }
+  async function addTag(noteId: string, name: string) {
+    if (!name.trim()) return;
 
-  async function saveEdit() {
-    if (!editingId) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
 
-    const { data } = await supabase
-      .from("notes")
-      .update({ title, content })
-      .eq("id", editingId)
-      .select()
+    // get or create tag
+    let { data: tag } = await supabase
+      .from("tags")
+      .select("id, name")
+      .eq("name", name)
       .single();
 
-    if (!data) return;
+    if (!tag) {
+      const res = await supabase
+        .from("tags")
+        .insert({ name, user_id: user.id })
+        .select()
+        .single();
+      tag = res.data;
+    }
 
-    setNotes((prev) =>
-      prev.map((n) => (n.id === editingId ? data : n))
-    );
+    if (!tag) return;
 
-    setEditingId(null);
-    setTitle("");
-    setContent("");
+    await supabase.from("note_tags").insert({
+      note_id: noteId,
+      tag_id: tag.id,
+    });
+
+    loadNotes();
+  }
+
+  async function removeTag(noteId: string, tagId: string) {
+    await supabase
+      .from("note_tags")
+      .delete()
+      .eq("note_id", noteId)
+      .eq("tag_id", tagId);
+
+    loadNotes();
   }
 
   async function archiveNote(id: string) {
-    const { data } = await supabase
+    await supabase
       .from("notes")
       .update({ archived: true })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (!data) return;
-    setNotes((prev) => prev.filter((n) => n.id !== id));
+      .eq("id", id);
+    loadNotes();
   }
 
   async function restoreNote(id: string) {
-    const { data } = await supabase
+    await supabase
       .from("notes")
       .update({ archived: false })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (!data) return;
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-  }
-
-  async function deleteForever(id: string) {
-    await supabase.from("notes").delete().eq("id", id);
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-  }
-
-  async function moveNote(noteId: string, newNotebookId: string | null) {
-    const { data } = await supabase
-      .from("notes")
-      .update({ notebook_id: newNotebookId })
-      .eq("id", noteId)
-      .select()
-      .single();
-
-    if (!data) return;
-
-    setNotes((prev) =>
-      prev.map((n) => (n.id === noteId ? data : n))
-    );
+      .eq("id", id);
+    loadNotes();
   }
 
   useEffect(() => {
     loadNotebooks();
+    loadTags();
     loadNotes();
-  }, [notebookId, showArchive]);
+  }, [notebookId, showArchive, filterTag]);
 
   return (
     <div>
       <div style={{ marginBottom: 12 }}>
-        <button onClick={() => setShowArchive(false)}>
-          Notes
-        </button>
-        <button
-          onClick={() => setShowArchive(true)}
-          style={{ marginLeft: 6 }}
-        >
+        <button onClick={() => setShowArchive(false)}>Notes</button>
+        <button onClick={() => setShowArchive(true)} style={{ marginLeft: 6 }}>
           Archive
         </button>
+        {filterTag && (
+          <button
+            onClick={() => setFilterTag(null)}
+            style={{ marginLeft: 6 }}
+          >
+            Clear tag: #{filterTag.name}
+          </button>
+        )}
       </div>
 
       {!showArchive && (
@@ -183,83 +211,68 @@ export default function Notes({
             rows={3}
           />
           <br />
-
-          {editingId ? (
-            <>
-              <button onClick={saveEdit}>Save</button>
-              <button
-                onClick={() => {
-                  setEditingId(null);
-                  setTitle("");
-                  setContent("");
-                }}
-                style={{ marginLeft: 6 }}
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <button onClick={createNote}>Add note</button>
-          )}
+          <button onClick={createNote}>Add note</button>
         </div>
       )}
 
       <ul>
-        {notes.map((note) => (
-          <li key={note.id} style={{ marginBottom: 14 }}>
-            <strong>{note.title}</strong>
-            <p>{note.content}</p>
+        {notes
+          .filter((n) =>
+            filterTag
+              ? noteTags[n.id]?.some((t) => t.id === filterTag.id)
+              : true
+          )
+          .map((note) => (
+            <li key={note.id} style={{ marginBottom: 16 }}>
+              <strong>{note.title}</strong>
+              <p>{note.content}</p>
 
-            {!showArchive && (
-              <>
-                <select
-                  value={note.notebook_id ?? ""}
-                  onChange={(e) =>
-                    moveNote(
-                      note.id,
-                      e.target.value || null
-                    )
-                  }
-                >
-                  <option value="">All notes</option>
-                  {notebooks.map((nb) => (
-                    <option key={nb.id} value={nb.id}>
-                      {nb.name}
-                    </option>
-                  ))}
-                </select>
+              {/* Tags */}
+              <div style={{ marginBottom: 6 }}>
+                {(noteTags[note.id] ?? []).map((t) => (
+                  <span key={t.id} style={{ marginRight: 6 }}>
+                    <button onClick={() => setFilterTag(t)}>
+                      #{t.name}
+                    </button>
+                    <button
+                      onClick={() => removeTag(note.id, t.id)}
+                      style={{ marginLeft: 2 }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
 
+              {!showArchive && (
+                <>
+                  <input
+                    placeholder="Add tag"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        addTag(note.id, e.currentTarget.value);
+                        e.currentTarget.value = "";
+                      }
+                    }}
+                  />
+
+                  <div style={{ marginTop: 6 }}>
+                    <button onClick={() => archiveNote(note.id)}>
+                      Archive
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {showArchive && (
                 <div style={{ marginTop: 6 }}>
-                  <button onClick={() => startEdit(note)}>
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => archiveNote(note.id)}
-                    style={{ marginLeft: 6 }}
-                  >
-                    Archive
+                  <button onClick={() => restoreNote(note.id)}>
+                    Restore
                   </button>
                 </div>
-              </>
-            )}
-
-            {showArchive && (
-              <div style={{ marginTop: 6 }}>
-                <button
-                  onClick={() => restoreNote(note.id)}
-                >
-                  Restore
-                </button>
-                <button
-                  onClick={() => deleteForever(note.id)}
-                  style={{ marginLeft: 6 }}
-                >
-                  Delete forever
-                </button>
-              </div>
-            )}
-          </li>
-        ))}
+              )}
+            </li>
+          ))}
       </ul>
     </div>
   );

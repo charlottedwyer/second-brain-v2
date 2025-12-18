@@ -1,0 +1,86 @@
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
+
+type Notebook = {
+  id: string;
+  name: string;
+};
+
+export default function Notebooks({
+  onSelect,
+}: {
+  onSelect: (id: string | null) => void;
+}) {
+  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
+  const [name, setName] = useState("");
+
+  async function loadNotebooks() {
+    const { data } = await supabase
+      .from("notebooks")
+      .select("id, name")
+      .order("created_at", { ascending: true });
+
+    setNotebooks(data ?? []);
+  }
+
+  async function createNotebook() {
+    if (!name.trim()) return;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("notebooks")
+      .insert({
+        name,
+        user_id: user.id,
+      })
+      .select()
+      .single();
+
+    if (!data) return;
+
+    setNotebooks((prev) => [...prev, data]);
+    setName("");
+  }
+
+  useEffect(() => {
+    loadNotebooks();
+  }, []);
+
+  return (
+    <div>
+      <h3>Notebooks</h3>
+
+      <div style={{ marginBottom: 12 }}>
+        <input
+          placeholder="New notebook"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <button onClick={createNotebook} style={{ marginLeft: 6 }}>
+          Create
+        </button>
+      </div>
+
+      <ul>
+        <li>
+          <button onClick={() => onSelect(null)}>
+            All notes
+          </button>
+        </li>
+
+        {notebooks.map((nb) => (
+          <li key={nb.id}>
+            <button onClick={() => onSelect(nb.id)}>
+              {nb.name}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

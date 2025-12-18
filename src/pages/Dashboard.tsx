@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import Notes from "./Notes";
 import Media from "./Media";
 import Wiki from "./Wiki";
+import Notebooks from "./Notebooks";
 
 type DashboardProps = {
   toggleTheme: () => void;
 };
 
 export default function Dashboard({ toggleTheme }: DashboardProps) {
+  const [activeNotebook, setActiveNotebook] =
+    useState<string | null>(null);
+
   async function signOut() {
     await supabase.auth.signOut();
   }
@@ -40,7 +45,8 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
           <h2>Notes</h2>
         </div>
         <div className="card-body">
-          <Notes />
+          <Notebooks onSelect={setActiveNotebook} />
+          <Notes notebookId={activeNotebook} />
         </div>
       </div>
 

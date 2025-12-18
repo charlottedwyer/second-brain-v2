@@ -7,20 +7,27 @@ type Note = {
   content: string;
 };
 
-export default function Notes() {
+export default function Notes({
+  notebookId,
+}: {
+  notebookId: string | null;
+}) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
 
   async function loadNotes() {
-    const { data, error } = await supabase
+    let query = supabase
       .from("notes")
       .select("id, title, content")
       .order("created_at", { ascending: false });
 
-    if (error) return;
+    if (notebookId) {
+      query = query.eq("notebook_id", notebookId);
+    }
 
+    const { data } = await query;
     setNotes(data ?? []);
   }
 
@@ -33,17 +40,18 @@ export default function Notes() {
 
     if (!user) return;
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("notes")
       .insert({
         title,
         content,
         user_id: user.id,
+        notebook_id: notebookId,
       })
       .select("id, title, content")
       .single();
 
-    if (error || !data) return;
+    if (!data) return;
 
     setNotes((prev) => [data, ...prev]);
     setTitle("");
@@ -59,17 +67,17 @@ export default function Notes() {
   async function saveEdit() {
     if (!editingId) return;
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("notes")
       .update({ title, content })
       .eq("id", editingId)
       .select("id, title, content")
       .single();
 
-    if (error || !data) return;
+    if (!data) return;
 
     setNotes((prev) =>
-      prev.map((note) => (note.id === editingId ? data : note))
+      prev.map((n) => (n.id === editingId ? data : n))
     );
 
     setEditingId(null);
@@ -78,15 +86,13 @@ export default function Notes() {
   }
 
   async function deleteNote(id: string) {
-    const { error } = await supabase.from("notes").delete().eq("id", id);
-    if (error) return;
-
-    setNotes((prev) => prev.filter((note) => note.id !== id));
+    await supabase.from("notes").delete().eq("id", id);
+    setNotes((prev) => prev.filter((n) => n.id !== id));
   }
 
   useEffect(() => {
     loadNotes();
-  }, []);
+  }, [notebookId]);
 
   return (
     <div>
@@ -103,6 +109,7 @@ export default function Notes() {
           placeholder="Write something…"
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          rows={3}
         />
 
         <br />
@@ -116,6 +123,7 @@ export default function Notes() {
                 setTitle("");
                 setContent("");
               }}
+              style={{ marginLeft: 6 }}
             >
               Cancel
             </button>
@@ -131,8 +139,15 @@ export default function Notes() {
             <strong>{note.title}</strong>
             <p>{note.content}</p>
 
-            <button onClick={() => startEdit(note)}>Edit</button>
-            <button onClick={() => deleteNote(note.id)}>Delete</button>
+            <button onClick={() => startEdit(note)}>
+              Edit
+            </button>
+            <button
+              onClick={() => deleteNote(note.id)}
+              style={{ marginLeft: 6 }}
+            >
+              Delete
+            </button>
           </li>
         ))}
       </ul>

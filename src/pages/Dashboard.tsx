@@ -5,6 +5,8 @@ import Search from "./Search";
 import QuickCapture from "./QuickCapture";
 import Today from "./Today";
 
+import Reflection from "./Reflection";
+
 import Notebooks from "./Notebooks";
 import Notes from "./Notes";
 import Wiki from "./Wiki";
@@ -82,6 +84,15 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
               <Today />
             </div>
           </div>
+
+          <div className="card">
+  <div className="card-header">
+    <h2>Reflection</h2>
+  </div>
+  <div className="card-body">
+    <Reflection />
+  </div>
+</div>
 
           <div className="card">
             <div className="card-header">

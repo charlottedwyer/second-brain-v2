@@ -5,7 +5,10 @@ type MediaItem = {
   id: string;
   title: string;
   kind: string;
+  status: string;
 };
+
+const STATUSES = ["to-read", "watching", "finished"];
 
 export default function Media() {
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -15,7 +18,7 @@ export default function Media() {
   async function loadMedia() {
     const { data, error } = await supabase
       .from("media")
-      .select("id, title, kind")
+      .select("id, title, kind, status")
       .order("created_at", { ascending: false });
 
     if (error) return;
@@ -36,15 +39,31 @@ export default function Media() {
       .insert({
         title,
         kind,
+        status: "to-read",
         user_id: user.id,
       })
-      .select("id, title, kind")
+      .select("id, title, kind, status")
       .single();
 
     if (error || !data) return;
 
     setItems((prev) => [data, ...prev]);
     setTitle("");
+  }
+
+  async function updateStatus(id: string, status: string) {
+    const { data, error } = await supabase
+      .from("media")
+      .update({ status })
+      .eq("id", id)
+      .select("id, title, kind, status")
+      .single();
+
+    if (error || !data) return;
+
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? data : item))
+    );
   }
 
   useEffect(() => {
@@ -54,7 +73,7 @@ export default function Media() {
   return (
     <div>
       <p style={{ opacity: 0.7, marginBottom: 12 }}>
-        Books, films, shows, music.
+        Books, films, shows, music — tracked intentionally.
       </p>
 
       <div style={{ marginBottom: 16 }}>
@@ -82,9 +101,26 @@ export default function Media() {
 
       <ul>
         {items.map((item) => (
-          <li key={item.id}>
+          <li key={item.id} style={{ marginBottom: 12 }}>
             <strong>{item.title}</strong>{" "}
-            <span style={{ opacity: 0.6 }}>({item.kind})</span>
+            <span style={{ opacity: 0.6 }}>
+              ({item.kind})
+            </span>
+
+            <div style={{ marginTop: 4 }}>
+              {STATUSES.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => updateStatus(item.id, s)}
+                  style={{
+                    marginRight: 6,
+                    opacity: item.status === s ? 1 : 0.5,
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </li>
         ))}
       </ul>

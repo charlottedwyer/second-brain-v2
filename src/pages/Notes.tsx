@@ -9,11 +9,6 @@ type Note = {
   archived: boolean;
 };
 
-type Notebook = {
-  id: string;
-  name: string;
-};
-
 type Tag = {
   id: string;
   name: string;
@@ -25,33 +20,12 @@ export default function Notes({
   notebookId: string | null;
 }) {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
   const [noteTags, setNoteTags] = useState<Record<string, Tag[]>>({});
   const [filterTag, setFilterTag] = useState<Tag | null>(null);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [showArchive, setShowArchive] = useState(false);
-
-  async function loadNotebooks() {
-    const { data } = await supabase
-      .from("notebooks")
-      .select("id, name")
-      .order("created_at");
-
-    setNotebooks(data ?? []);
-  }
-
-  async function loadTags() {
-    const { data } = await supabase
-      .from("tags")
-      .select("id, name")
-      .order("name");
-
-    setTags(data ?? []);
-  }
 
   async function loadNotes() {
     let query = supabase
@@ -68,28 +42,30 @@ export default function Notes({
     const notesData = data ?? [];
     setNotes(notesData);
 
-    // Load tags per note
-    if (notesData.length > 0) {
-      const ids = notesData.map((n) => n.id);
-      const { data: joins } = await supabase
-        .from("note_tags")
-        .select("note_id, tags(id, name)")
-        .in("note_id", ids);
-
-      const map: Record<string, Tag[]> = {};
-      joins?.forEach((j: any) => {
-        if (!map[j.note_id]) map[j.note_id] = [];
-        map[j.note_id].push(j.tags);
-      });
-
-      setNoteTags(map);
-    } else {
+    if (notesData.length === 0) {
       setNoteTags({});
+      return;
     }
+
+    const ids = notesData.map((n) => n.id);
+
+    const { data: joins } = await supabase
+      .from("note_tags")
+      .select("note_id, tags(id, name)")
+      .in("note_id", ids);
+
+    const map: Record<string, Tag[]> = {};
+    joins?.forEach((j: any) => {
+      if (!map[j.note_id]) map[j.note_id] = [];
+      map[j.note_id].push(j.tags);
+    });
+
+    setNoteTags(map);
   }
 
   async function createNote() {
     if (!title.trim()) return;
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -121,7 +97,6 @@ export default function Notes({
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // get or create tag
     let { data: tag } = await supabase
       .from("tags")
       .select("id, name")
@@ -162,6 +137,7 @@ export default function Notes({
       .from("notes")
       .update({ archived: true })
       .eq("id", id);
+
     loadNotes();
   }
 
@@ -170,12 +146,11 @@ export default function Notes({
       .from("notes")
       .update({ archived: false })
       .eq("id", id);
+
     loadNotes();
   }
 
   useEffect(() => {
-    loadNotebooks();
-    loadTags();
     loadNotes();
   }, [notebookId, showArchive, filterTag]);
 
@@ -186,6 +161,7 @@ export default function Notes({
         <button onClick={() => setShowArchive(true)} style={{ marginLeft: 6 }}>
           Archive
         </button>
+
         {filterTag && (
           <button
             onClick={() => setFilterTag(null)}

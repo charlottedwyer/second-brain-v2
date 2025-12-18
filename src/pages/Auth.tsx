@@ -4,20 +4,26 @@ import { supabase } from "../lib/supabaseClient";
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function signIn() {
+  async function handleAuth() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) setError(error.message);
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) setError(error.message);
     }
 
     setLoading(false);
@@ -25,7 +31,7 @@ export default function Auth() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Sign in</h1>
+      <h1>{isSignUp ? "Sign up" : "Sign in"}</h1>
 
       <input
         type="email"
@@ -45,11 +51,26 @@ export default function Auth() {
 
       <br />
 
-      <button onClick={signIn} disabled={loading}>
-        {loading ? "Signing in…" : "Sign in"}
+      <button onClick={handleAuth} disabled={loading}>
+        {loading
+          ? "Please wait…"
+          : isSignUp
+          ? "Create account"
+          : "Sign in"}
       </button>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <hr />
+
+      <button
+        onClick={() => setIsSignUp(!isSignUp)}
+        style={{ fontSize: 14 }}
+      >
+        {isSignUp
+          ? "Already have an account? Sign in"
+          : "Need an account? Sign up"}
+      </button>
     </div>
   );
 }

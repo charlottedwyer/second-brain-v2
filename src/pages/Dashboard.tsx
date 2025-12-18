@@ -8,38 +8,37 @@ export default function Dashboard() {
     await supabase.auth.signOut();
   }
 
-  return (
-    <div style={{ padding: 24 }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-        }}
-      >
-        <div>
-          <h1>Dashboard</h1>
-          <p style={{ opacity: 0.7 }}>
-            Your second brain, in progress.
-          </p>
-        </div>
+ return (
+  <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
+    <header
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 32,
+      }}
+    >
+      <div>
+        <h1 style={{ marginBottom: 4 }}>Dashboard</h1>
+        <p style={{ opacity: 0.7, margin: 0 }}>
+          Your second brain, in progress.
+        </p>
+      </div>
 
-        <button onClick={signOut}>Log out</button>
-      </header>
+      <button onClick={signOut}>Log out</button>
+    </header>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2>Notes</h2>
-        <Notes />
-      </section>
-
-      <section style={{ marginBottom: 32 }}>
-        <Media />
-      </section>
-
-      <section>
-        <Wiki />
-      </section>
+    <div className="card">
+      <h2>Notes</h2>
+      <Notes />
     </div>
-  );
-}
+
+    <div className="card">
+      <Media />
+    </div>
+
+    <div className="card">
+      <Wiki />
+    </div>
+  </div>
+);}

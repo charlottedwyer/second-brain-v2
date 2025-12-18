@@ -5,7 +5,12 @@ export default function Auth() {
   const [email, setEmail] = useState("");
 
   async function signIn() {
-    await supabase.auth.signInWithOtp({ email });
+await supabase.auth.signInWithOtp({
+  email,
+  options: {
+    emailRedirectTo: window.location.origin,
+  },
+});
     alert("Check your email for the login link");
   }
 

@@ -70,11 +70,21 @@ button:focus-visible {
 .card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 20px;
   margin-bottom: 24px;
 }
 
-.card h2 {
-  margin-top: 0;
+.card-header {
+  margin-bottom: 12px;
 }
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.card-body {
+  font-size: 0.95rem;
+}
+

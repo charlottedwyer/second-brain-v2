@@ -1,28 +1,27 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-import Search from "./Search";
-import QuickCapture from "./QuickCapture";
-import Today from "./Today";
-
-import Reflection from "./Reflection";
-
-import Notebooks from "./Notebooks";
 import Notes from "./Notes";
+import Notebooks from "./Notebooks";
 import Wiki from "./Wiki";
-
 import Calendar from "./Calendar";
 import Habits from "./Habits";
-
+import Media from "./Media";
+import Today from "./Today";
+import Reflection from "./Reflection";
 import Stats from "./Stats";
 
-import Media from "./Media";
+import ThemePicker from "../components/ThemePicker";
 
 type DashboardProps = {
-  toggleTheme: () => void;
+  theme: string;
+  setTheme: (t: string) => void;
 };
 
-export default function Dashboard({ toggleTheme }: DashboardProps) {
+export default function Dashboard({
+  theme,
+  setTheme,
+}: DashboardProps) {
   const [activeNotebook, setActiveNotebook] =
     useState<string | null>(null);
 
@@ -38,7 +37,7 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 24,
+          marginBottom: 32,
         }}
       >
         <div>
@@ -48,23 +47,16 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={toggleTheme}>Toggle theme</button>
+        <div style={{ display: "flex", gap: 12 }}>
+          <ThemePicker theme={theme} setTheme={setTheme} />
           <button onClick={signOut}>Log out</button>
         </div>
       </header>
 
-      {/* GLOBAL SEARCH */}
+      {/* SEARCH / QUICK CAPTURE / TODAY */}
       <div className="card">
         <div className="card-body">
-          <Search />
-        </div>
-      </div>
-
-      {/* QUICK CAPTURE */}
-      <div className="card">
-        <div className="card-body">
-          <QuickCapture />
+          <Today />
         </div>
       </div>
 
@@ -77,25 +69,16 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
           gap: 24,
         }}
       >
-        {/* LEFT COLUMN — THINKING */}
+        {/* LEFT COLUMN */}
         <div>
           <div className="card">
             <div className="card-header">
-              <h2>Today</h2>
+              <h2>Reflection</h2>
             </div>
             <div className="card-body">
-              <Today />
+              <Reflection />
             </div>
           </div>
-
-          <div className="card">
-  <div className="card-header">
-    <h2>Reflection</h2>
-  </div>
-  <div className="card-body">
-    <Reflection />
-  </div>
-</div>
 
           <div className="card">
             <div className="card-header">
@@ -120,7 +103,7 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
           </div>
         </div>
 
-        {/* RIGHT COLUMN — TIME & BEHAVIOUR */}
+        {/* RIGHT COLUMN */}
         <div>
           <div className="card">
             <div className="card-header">
@@ -141,13 +124,13 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
           </div>
 
           <div className="card">
-  <div className="card-header">
-    <h2>Weekly Stats</h2>
-  </div>
-  <div className="card-body">
-    <Stats />
-  </div>
-</div>
+            <div className="card-header">
+              <h2>Weekly Stats</h2>
+            </div>
+            <div className="card-body">
+              <Stats />
+            </div>
+          </div>
 
           <div className="card">
             <div className="card-header">

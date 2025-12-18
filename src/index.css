@@ -21,6 +21,55 @@
   --accent: #818cf8;
 }
 
+:root {
+  --bg: #f7f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --accent: #7c83ff;
+  --border: #e5e7eb;
+}
+
+/* Dark */
+[data-theme="dark"] {
+  --bg: #0f1220;
+  --card: #171a2b;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #8b90ff;
+  --border: #2a2e45;
+}
+
+/* Lavender */
+[data-theme="lavender"] {
+  --bg: #f6f3ff;
+  --card: #ffffff;
+  --text: #2a2340;
+  --muted: #6b5fa7;
+  --accent: #9b87f5;
+  --border: #e4ddff;
+}
+
+/* Forest */
+[data-theme="forest"] {
+  --bg: #f4f7f4;
+  --card: #ffffff;
+  --text: #1f2d23;
+  --muted: #5f7a67;
+  --accent: #4f8f6f;
+  --border: #dbe6df;
+}
+
+/* Warm */
+[data-theme="warm"] {
+  --bg: #fff6ed;
+  --card: #ffffff;
+  --text: #3a2a1f;
+  --muted: #8a6d5a;
+  --accent: #e07a5f;
+  --border: #f2e1d3;
+}
+
 /* =========================
    BASE STYLES
    ========================= */

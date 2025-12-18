@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+import Search from "./Search";
 import QuickCapture from "./QuickCapture";
 import Today from "./Today";
-import Notes from "./Notes";
+
 import Notebooks from "./Notebooks";
+import Notes from "./Notes";
 import Wiki from "./Wiki";
+
 import Calendar from "./Calendar";
 import Habits from "./Habits";
 import Media from "./Media";
@@ -30,7 +33,7 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 32,
+          marginBottom: 24,
         }}
       >
         <div>
@@ -46,6 +49,20 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
         </div>
       </header>
 
+      {/* GLOBAL SEARCH */}
+      <div className="card">
+        <div className="card-body">
+          <Search />
+        </div>
+      </div>
+
+      {/* QUICK CAPTURE */}
+      <div className="card">
+        <div className="card-body">
+          <QuickCapture />
+        </div>
+      </div>
+
       {/* MAIN GRID */}
       <div
         className="dashboard-grid"
@@ -56,22 +73,16 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
         }}
       >
         {/* LEFT COLUMN — THINKING */}
-        <div className="card">
-  <div className="card-body">
-    <QuickCapture />
-  </div>
-</div>
-
-        <div className="card">
-  <div className="card-header">
-    <h2>Today</h2>
-  </div>
-  <div className="card-body">
-    <Today />
-  </div>
-</div>
-
         <div>
+          <div className="card">
+            <div className="card-header">
+              <h2>Today</h2>
+            </div>
+            <div className="card-body">
+              <Today />
+            </div>
+          </div>
+
           <div className="card">
             <div className="card-header">
               <h2>Notes</h2>

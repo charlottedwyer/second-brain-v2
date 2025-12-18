@@ -1,5 +1,7 @@
 import { supabase } from "../lib/supabaseClient";
 import Notes from "./Notes";
+import Media from "./Media";
+import Wiki from "./Wiki";
 
 export default function Dashboard() {
   async function signOut() {
@@ -26,9 +28,17 @@ export default function Dashboard() {
         <button onClick={signOut}>Log out</button>
       </header>
 
-      <section>
+      <section style={{ marginBottom: 32 }}>
         <h2>Notes</h2>
         <Notes />
+      </section>
+
+      <section style={{ marginBottom: 32 }}>
+        <Media />
+      </section>
+
+      <section>
+        <Wiki />
       </section>
     </div>
   );

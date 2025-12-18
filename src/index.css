@@ -72,3 +72,9 @@ select {
   border-radius: 6px;
   padding: 6px;
 }
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

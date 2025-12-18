@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+
 import Notes from "./Notes";
+import Notebooks from "./Notebooks";
+import Wiki from "./Wiki";
 import Calendar from "./Calendar";
 import Habits from "./Habits";
 import Media from "./Media";
-import Wiki from "./Wiki";
-import Notebooks from "./Notebooks";
 
 type DashboardProps = {
   toggleTheme: () => void;
@@ -20,7 +21,8 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
+    <div style={{ padding: 24, maxWidth: 1200, margin: "0 auto" }}>
+      {/* HEADER */}
       <header
         style={{
           display: "flex",
@@ -42,54 +44,68 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
         </div>
       </header>
 
-      {/* NOTES + NOTEBOOKS */}
-      <div className="card">
-        <div className="card-header">
-          <h2>Notes</h2>
-        </div>
-        <div className="card-body">
-          <Notebooks
-            activeNotebook={activeNotebook}
-            onSelect={setActiveNotebook}
-          />
+      {/* MAIN GRID */}
+      <div
+        className="dashboard-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr",
+          gap: 24,
+        }}
+      >
+        {/* LEFT COLUMN — THINKING */}
+        <div>
+          <div className="card">
+            <div className="card-header">
+              <h2>Notes</h2>
+            </div>
+            <div className="card-body">
+              <Notebooks
+                activeNotebook={activeNotebook}
+                onSelect={setActiveNotebook}
+              />
+              <Notes notebookId={activeNotebook} />
+            </div>
+          </div>
 
-          <Notes notebookId={activeNotebook} />
+          <div className="card">
+            <div className="card-header">
+              <h2>Wiki</h2>
+            </div>
+            <div className="card-body">
+              <Wiki />
+            </div>
+          </div>
         </div>
-      </div>
 
-<div className="card">
-  <div className="card-header">
-    <h2>Calendar</h2>
-  </div>
-  <div className="card-body">
-    <Calendar />
-  </div>
-</div>
+        {/* RIGHT COLUMN — TIME & BEHAVIOUR */}
+        <div>
+          <div className="card">
+            <div className="card-header">
+              <h2>Calendar</h2>
+            </div>
+            <div className="card-body">
+              <Calendar />
+            </div>
+          </div>
 
-<div className="card">
-  <div className="card-header">
-    <h2>Habits</h2>
-  </div>
-  <div className="card-body">
-    <Habits />
-  </div>
-</div>
+          <div className="card">
+            <div className="card-header">
+              <h2>Habits</h2>
+            </div>
+            <div className="card-body">
+              <Habits />
+            </div>
+          </div>
 
-      <div className="card">
-        <div className="card-header">
-          <h2>Media</h2>
-        </div>
-        <div className="card-body">
-          <Media />
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="card-header">
-          <h2>Wiki</h2>
-        </div>
-        <div className="card-body">
-          <Wiki />
+          <div className="card">
+            <div className="card-header">
+              <h2>Media</h2>
+            </div>
+            <div className="card-body">
+              <Media />
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import Notes from "./Notes";
+import Calendar from "./Calendar";
 import Media from "./Media";
 import Wiki from "./Wiki";
 import Notebooks from "./Notebooks";
@@ -54,6 +55,15 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
           <Notes notebookId={activeNotebook} />
         </div>
       </div>
+
+<div className="card">
+  <div className="card-header">
+    <h2>Calendar</h2>
+  </div>
+  <div className="card-body">
+    <Calendar />
+  </div>
+</div>
 
       <div className="card">
         <div className="card-header">

@@ -13,6 +13,9 @@ import Wiki from "./Wiki";
 
 import Calendar from "./Calendar";
 import Habits from "./Habits";
+
+import Stats from "./Stats";
+
 import Media from "./Media";
 
 type DashboardProps = {
@@ -136,6 +139,15 @@ export default function Dashboard({ toggleTheme }: DashboardProps) {
               <Habits />
             </div>
           </div>
+
+          <div className="card">
+  <div className="card-header">
+    <h2>Weekly Stats</h2>
+  </div>
+  <div className="card-body">
+    <Stats />
+  </div>
+</div>
 
           <div className="card">
             <div className="card-header">

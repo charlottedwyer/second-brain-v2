@@ -12,7 +12,11 @@ export default function Notes() {
 
   useEffect(() => {
     async function loadNotes() {
-      const { data } = await supabase.from("notes").select("*");
+      const { data } = await supabase
+  .from("notes")
+  .select("*")
+  .order("created_at", { ascending: false });
+
       setNotes(data ?? []);
     }
 

@@ -7,15 +7,20 @@ import type { Session } from "@supabase/supabase-js";
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
+  // Apply theme to document
   useEffect(() => {
-    // Get initial session
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  // Load auth session
+  useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
     });
 
-    // Listen for changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -26,6 +31,10 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  function toggleTheme() {
+    setTheme((t) => (t === "light" ? "dark" : "light"));
+  }
+
   if (loading) {
     return <div style={{ padding: 24 }}>Loading…</div>;
   }
@@ -34,5 +43,5 @@ export default function App() {
     return <Auth />;
   }
 
-  return <Dashboard />;
+  return <Dashboard toggleTheme={toggleTheme} />;
 }

@@ -3,7 +3,11 @@ import Notes from "./Notes";
 import Media from "./Media";
 import Wiki from "./Wiki";
 
-export default function Dashboard() {
+type DashboardProps = {
+  toggleTheme: () => void;
+};
+
+export default function Dashboard({ toggleTheme }: DashboardProps) {
   async function signOut() {
     await supabase.auth.signOut();
   }
@@ -20,12 +24,15 @@ export default function Dashboard() {
       >
         <div>
           <h1 style={{ marginBottom: 4 }}>Dashboard</h1>
-          <p style={{ opacity: 0.7, margin: 0 }}>
+          <p style={{ margin: 0, opacity: 0.7 }}>
             Your second brain, in progress.
           </p>
         </div>
 
-        <button onClick={signOut}>Log out</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={toggleTheme}>Toggle theme</button>
+          <button onClick={signOut}>Log out</button>
+        </div>
       </header>
 
       <div className="card">

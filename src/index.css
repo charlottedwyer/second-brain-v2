@@ -28,6 +28,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background: #f0f1f4;
 }
 
 h1 {
@@ -68,8 +69,8 @@ button:focus-visible {
 }
 
 .card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: #f6f7f9; /* soft neutral, not white */
+  border: 1px solid #e2e4e8;
   border-radius: 14px;
   padding: 20px;
   margin-bottom: 24px;
@@ -81,10 +82,9 @@ button:focus-visible {
 
 .card-header h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 .card-body {
   font-size: 0.95rem;
 }
-

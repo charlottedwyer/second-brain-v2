@@ -20,8 +20,11 @@ export default function App() {
       <Navigation />
 
       <Routes>
-        <Route path="/" element={<Dashboard theme={theme} setTheme={setTheme} />} />
-        <Route path="/notes" element={<Notes notebookId={null} />} />
+        <Route
+          path="/"
+          element={<Dashboard theme={theme} setTheme={setTheme} />}
+        />
+        <Route path="/notes" element={<Notes />} />
         <Route path="/wiki" element={<Wiki />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/health" element={<Health />} />

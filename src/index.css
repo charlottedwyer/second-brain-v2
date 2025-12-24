@@ -8,6 +8,7 @@
   --text: #1f2937;
   --muted: #6b7280;
   --accent: #7c83ff;
+  --accent-soft: rgba(124, 131, 255, 0.15);
   --border: #e5e7eb;
 }
 
@@ -18,6 +19,7 @@
   --text: #e5e7eb;
   --muted: #9ca3af;
   --accent: #8b90ff;
+  --accent-soft: rgba(139, 144, 255, 0.2);
   --border: #2a2e45;
 }
 
@@ -25,13 +27,21 @@
    BASE
    ========================= */
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
 }
+
+/* =========================
+   BUTTONS
+   ========================= */
 
 button {
   background: var(--accent);
@@ -40,15 +50,53 @@ button {
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 14px;
+  cursor: pointer;
 }
 
+button:hover {
+  opacity: 0.92;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button:focus-visible {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+
+/* =========================
+   INPUTS
+   ========================= */
+
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px;
+  background: var(--card);
+  color: var(--text);
 }
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* =========================
+   CARDS
+   ========================= */
 
 .card {
   background: var(--card);
@@ -56,6 +104,14 @@ textarea {
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 20px;
+}
+
+.card h2 {
+  font-size: 1.05rem;
+}
+
+.card-body > * + * {
+  margin-top: 12px;
 }
 
 /* =========================
@@ -68,101 +124,6 @@ textarea {
   gap: 24px;
 }
 
-/* =========================
-   SHARED LIST / EDITOR LAYOUT
-   ========================= */
-
-.split-layout {
-  display: flex;
-  gap: 16px;
-}
-
-.split-list {
-  width: 220px;
-}
-
-.split-editor {
-  flex: 1;
-}
-
-/* =========================
-   MOBILE BEHAVIOUR
-   ========================= */
-
-@media (max-width: 900px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .split-layout {
-    display: block;
-  }
-
-  .split-list {
-    width: 100%;
-  }
-
-  .split-editor {
-    width: 100%;
-  }
-
-  .mobile-hidden {
-    display: none;
-  }
-
-  button {
-    width: 100%;
-    font-size: 16px;
-  }
-}
-.dashboard-container {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-.dashboard-subtitle {
-  margin: 0;
-  opacity: 0.7;
-}
-
-.dashboard-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* Mobile */
-@media (max-width: 900px) {
-  .dashboard-container {
-    padding: 16px;
-  }
-
-  .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .dashboard-actions {
-    width: 100%;
-  }
-}
-.dashboard-card-actions {
-  margin-top: 12px;
-}
-
-.dashboard-card-actions button {
-  width: 100%;
-}
 /* =========================
    PAGE LAYOUT (NOTION STYLE)
    ========================= */
@@ -192,8 +153,110 @@ textarea {
   flex-wrap: wrap;
 }
 
-/* Mobile */
+/* =========================
+   SPLIT LIST / EDITOR
+   ========================= */
+
+.split-layout {
+  display: flex;
+  gap: 16px;
+}
+
+.split-list {
+  width: 220px;
+}
+
+.split-editor {
+  flex: 1;
+}
+
+/* =========================
+   NOTEBOOK GRID
+   ========================= */
+
+.notebook-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+.notebook-card {
+  cursor: pointer;
+  text-align: center;
+}
+
+.notebook-card:hover .notebook-cover {
+  outline: 3px solid var(--accent-soft);
+}
+
+.notebook-cover {
+  height: 140px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+/* fake notebook covers */
+.cover-0 { background: linear-gradient(135deg, #fde68a, #fca5a5); }
+.cover-1 { background: linear-gradient(135deg, #bfdbfe, #a5b4fc); }
+.cover-2 { background: linear-gradient(135deg, #bbf7d0, #86efac); }
+.cover-3 { background: linear-gradient(135deg, #fecaca, #fda4af); }
+.cover-4 { background: linear-gradient(135deg, #e9d5ff, #c4b5fd); }
+.cover-5 { background: linear-gradient(135deg, #fde68a, #fcd34d); }
+
+.notebook-title {
+  font-weight: 500;
+}
+
+/* =========================
+   RICH TEXT EDITOR (TIPTAP)
+   ========================= */
+
+.ProseMirror {
+  min-height: 200px;
+  line-height: 1.6;
+}
+
+.ProseMirror p {
+  margin: 0 0 0.75em;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3 {
+  margin: 1em 0 0.5em;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* =========================
+   MOBILE
+   ========================= */
+
 @media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .split-layout {
+    display: block;
+  }
+
+  .split-list,
+  .split-editor {
+    width: 100%;
+  }
+
+  .mobile-hidden {
+    display: none;
+  }
+
+  button {
+    width: 100%;
+    font-size: 16px;
+  }
+
   .page-container {
     padding: 16px;
   }
@@ -206,25 +269,7 @@ textarea {
     width: 100%;
   }
 }
-.card h2 {
-  font-size: 1.05rem;
-}
 
-.card-body > * + * {
-  margin-top: 12px;
-}
-
-/* Mobile comfort */
-@media (max-width: 900px) {
-  .card {
-    padding: 16px;
-  }
-
-  .card-body button {
-    padding: 12px;
-    font-size: 16px;
-  }
-}
 /* =========================
    MOBILE BOTTOM NAV
    ========================= */
@@ -259,34 +304,6 @@ textarea {
   }
 
   body {
-    padding-bottom: 70px; /* space for nav */
+    padding-bottom: 70px;
   }
-}
-.notebook-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 20px;
-}
-
-.notebook-card {
-  cursor: pointer;
-  text-align: center;
-}
-
-.notebook-cover {
-  height: 140px;
-  border-radius: 12px;
-  margin-bottom: 8px;
-}
-
-/* fake notebook covers */
-.cover-0 { background: linear-gradient(135deg, #fde68a, #fca5a5); }
-.cover-1 { background: linear-gradient(135deg, #bfdbfe, #a5b4fc); }
-.cover-2 { background: linear-gradient(135deg, #bbf7d0, #86efac); }
-.cover-3 { background: linear-gradient(135deg, #fecaca, #fda4af); }
-.cover-4 { background: linear-gradient(135deg, #e9d5ff, #c4b5fd); }
-.cover-5 { background: linear-gradient(135deg, #fde68a, #fcd34d); }
-
-.notebook-title {
-  font-weight: 500;
 }

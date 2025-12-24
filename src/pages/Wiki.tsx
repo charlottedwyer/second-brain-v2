@@ -2,32 +2,52 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import RichTextEditor from "../components/RichTextEditor";
 
-type Page = {
+type WikiPage = {
   id: number;
   title: string;
   content: string;
+  created_at: string;
 };
 
 export default function Wiki() {
-  const [pages, setPages] = useState<Page[]>([]);
-  const [selected, setSelected] = useState<Page | null>(null);
+  const [pages, setPages] = useState<WikiPage[]>([]);
+  const [selected, setSelected] = useState<WikiPage | null>(null);
   const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchPages();
   }, []);
 
   async function fetchPages() {
+    setLoading(true);
+
     const { data } = await supabase
       .from("wiki_pages")
       .select("*")
       .order("created_at", { ascending: false });
 
     if (data) setPages(data);
+    setLoading(false);
+  }
+
+  async function createPage() {
+    const { data } = await supabase
+      .from("wiki_pages")
+      .insert([{ title: "Untitled page", content: "" }])
+      .select()
+      .single();
+
+    if (data) {
+      setPages([data, ...pages]);
+      setSelected(data);
+      setContent("");
+    }
   }
 
   async function save() {
     if (!selected) return;
+
     await supabase
       .from("wiki_pages")
       .update({ content })
@@ -35,12 +55,27 @@ export default function Wiki() {
   }
 
   return (
-    <div>
-      <button onClick={() => setSelected(null)}>New Page</button>
+    <div className="page-container">
+      {/* PAGE HEADER */}
+      <header className="page-header">
+        <div>
+          <h1>Wiki</h1>
+          <p className="page-subtitle">
+            Your personal knowledge base — ideas, worlds, systems, lore.
+          </p>
+        </div>
 
+        <div className="page-actions">
+          <button onClick={createPage}>New page</button>
+        </div>
+      </header>
+
+      {/* CONTENT */}
       <div className="split-layout">
-        {/* LIST */}
-        <div className={`split-list ${selected ? "mobile-hidden" : ""}`}>
+        {/* PAGE LIST */}
+        <aside className={`split-list ${selected ? "mobile-hidden" : ""}`}>
+          {loading && <p>Loading…</p>}
+
           {pages.map((p) => (
             <div
               key={p.id}
@@ -48,23 +83,46 @@ export default function Wiki() {
                 setSelected(p);
                 setContent(p.content || "");
               }}
-              style={{ padding: 10, cursor: "pointer" }}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                cursor: "pointer",
+                background:
+                  selected?.id === p.id
+                    ? "var(--border)"
+                    : "transparent",
+                marginBottom: 4,
+              }}
             >
               <strong>{p.title}</strong>
             </div>
           ))}
-        </div>
+        </aside>
 
         {/* EDITOR */}
-        <div className={`split-editor ${!selected ? "mobile-hidden" : ""}`}>
-          {selected && (
+        <main className={`split-editor ${!selected ? "mobile-hidden" : ""}`}>
+          {selected ? (
             <>
-              <button onClick={() => setSelected(null)}>← Back</button>
+              {/* MOBILE BACK */}
+              <button
+                onClick={() => setSelected(null)}
+                style={{ marginBottom: 12 }}
+              >
+                ← Back
+              </button>
+
               <RichTextEditor value={content} onChange={setContent} />
-              <button onClick={save}>Save</button>
+
+              <div style={{ marginTop: 16 }}>
+                <button onClick={save}>Save</button>
+              </div>
             </>
+          ) : (
+            <p style={{ opacity: 0.6 }}>
+              Select a page to view or edit.
+            </p>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

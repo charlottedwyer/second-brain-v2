@@ -26,25 +26,17 @@ export default function Dashboard({ theme, setTheme }: DashboardProps) {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: "0 auto" }}>
+    <div className="dashboard-container">
       {/* HEADER */}
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 32,
-          gap: 16,
-        }}
-      >
+      <header className="dashboard-header">
         <div>
-          <h1 style={{ marginBottom: 4 }}>Dashboard</h1>
-          <p style={{ margin: 0, opacity: 0.7 }}>
+          <h1>Dashboard</h1>
+          <p className="dashboard-subtitle">
             Your second brain, in progress.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div className="dashboard-actions">
           <ThemePicker theme={theme} setTheme={setTheme} />
           <button onClick={signOut}>Log out</button>
         </div>

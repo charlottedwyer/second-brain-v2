@@ -6,6 +6,7 @@ import Notes from "./pages/Notes";
 import Wiki from "./pages/Wiki";
 import Calendar from "./pages/Calendar";
 import Habits from "./pages/Habits";
+import Health from "./pages/Health";
 import Media from "./pages/Media";
 import Stats from "./pages/Stats";
 
@@ -24,10 +25,10 @@ export default function App() {
         <Route path="/wiki" element={<Wiki />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/habits" element={<Habits />} />
+        <Route path="/health" element={<Health />} />
         <Route path="/media" element={<Media />} />
         <Route path="/stats" element={<Stats />} />
 
-        {/* fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

@@ -31,8 +31,8 @@ export default function Navigation() {
       <NavLink to="/wiki" style={linkStyle}>
         Wiki
       </NavLink>
-      <NavLink to="/habits" style={linkStyle}>
-        Habits
+      <NavLink to="/health" style={linkStyle}>
+        Health
       </NavLink>
       <NavLink to="/media" style={linkStyle}>
         Media

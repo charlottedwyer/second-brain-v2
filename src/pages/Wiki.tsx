@@ -12,6 +12,7 @@ type WikiPage = {
 export default function Wiki() {
   const [pages, setPages] = useState<WikiPage[]>([]);
   const [selected, setSelected] = useState<WikiPage | null>(null);
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -41,17 +42,46 @@ export default function Wiki() {
     if (data) {
       setPages([data, ...pages]);
       setSelected(data);
+      setTitle(data.title);
       setContent("");
     }
   }
 
-  async function save() {
+  async function savePage() {
     if (!selected) return;
 
     await supabase
       .from("wiki_pages")
-      .update({ content })
+      .update({
+        title,
+        content,
+      })
       .eq("id", selected.id);
+
+    setPages((prev) =>
+      prev.map((p) =>
+        p.id === selected.id ? { ...p, title, content } : p
+      )
+    );
+  }
+
+  async function deletePage() {
+    if (!selected) return;
+
+    const confirmDelete = confirm(
+      "Delete this page? This cannot be undone."
+    );
+    if (!confirmDelete) return;
+
+    await supabase
+      .from("wiki_pages")
+      .delete()
+      .eq("id", selected.id);
+
+    setPages((prev) => prev.filter((p) => p.id !== selected.id));
+    setSelected(null);
+    setTitle("");
+    setContent("");
   }
 
   return (
@@ -81,6 +111,7 @@ export default function Wiki() {
               key={p.id}
               onClick={() => {
                 setSelected(p);
+                setTitle(p.title);
                 setContent(p.content || "");
               }}
               style={{
@@ -111,15 +142,34 @@ export default function Wiki() {
                 ← Back
               </button>
 
+              {/* TITLE */}
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Page title"
+                style={{
+                  fontSize: 22,
+                  fontWeight: 600,
+                  marginBottom: 12,
+                }}
+              />
+
               <RichTextEditor value={content} onChange={setContent} />
 
-              <div style={{ marginTop: 16 }}>
-                <button onClick={save}>Save</button>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  marginTop: 16,
+                }}
+              >
+                <button onClick={savePage}>Save</button>
+                <button onClick={deletePage}>Delete</button>
               </div>
             </>
           ) : (
             <p style={{ opacity: 0.6 }}>
-              Select a page to view or edit.
+              Select or create a wiki page.
             </p>
           )}
         </main>

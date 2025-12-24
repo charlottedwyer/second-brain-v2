@@ -1,16 +1,10 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
-import Notes from "./Notes";
-import Notebooks from "./Notebooks";
-import Wiki from "./Wiki";
-import Calendar from "./Calendar";
-import Habits from "./Habits";
-import Media from "./Media";
 import Today from "./Today";
 import Reflection from "./Reflection";
 import Stats from "./Stats";
-
 import ThemePicker from "../components/ThemePicker";
 
 type DashboardProps = {
@@ -19,10 +13,13 @@ type DashboardProps = {
 };
 
 export default function Dashboard({ theme, setTheme }: DashboardProps) {
-  const [activeNotebook, setActiveNotebook] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   async function signOut() {
+    setLoading(true);
     await supabase.auth.signOut();
+    setLoading(false);
   }
 
   return (
@@ -32,26 +29,31 @@ export default function Dashboard({ theme, setTheme }: DashboardProps) {
         <div>
           <h1>Dashboard</h1>
           <p className="dashboard-subtitle">
-            Your second brain, in progress.
+            Your second brain, at a glance.
           </p>
         </div>
 
         <div className="dashboard-actions">
           <ThemePicker theme={theme} setTheme={setTheme} />
-          <button onClick={signOut}>Log out</button>
+          <button onClick={signOut} disabled={loading}>
+            {loading ? "Signing out…" : "Log out"}
+          </button>
         </div>
       </header>
 
       {/* TODAY */}
       <div className="card">
+        <div className="card-header">
+          <h2>Today</h2>
+        </div>
         <div className="card-body">
           <Today />
         </div>
       </div>
 
-      {/* MAIN GRID */}
+      {/* QUICK ACCESS */}
       <div className="dashboard-grid">
-        {/* LEFT COLUMN */}
+        {/* LEFT */}
         <div>
           <div className="card">
             <div className="card-header">
@@ -64,14 +66,37 @@ export default function Dashboard({ theme, setTheme }: DashboardProps) {
 
           <div className="card">
             <div className="card-header">
+              <h2>Stats</h2>
+            </div>
+            <div className="card-body">
+              <Stats />
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT */}
+        <div>
+          <div className="card">
+            <div className="card-header">
               <h2>Notes</h2>
             </div>
             <div className="card-body">
-              <Notebooks
-                activeNotebook={activeNotebook}
-                onSelect={setActiveNotebook}
-              />
-              <Notes notebookId={activeNotebook} />
+              <p>Create and edit your notes.</p>
+              <button onClick={() => navigate("/notes")}>
+                Open Notes
+              </button>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h2>Calendar</h2>
+            </div>
+            <div className="card-body">
+              <p>View upcoming events.</p>
+              <button onClick={() => navigate("/calendar")}>
+                Open Calendar
+              </button>
             </div>
           </div>
 
@@ -80,37 +105,10 @@ export default function Dashboard({ theme, setTheme }: DashboardProps) {
               <h2>Wiki</h2>
             </div>
             <div className="card-body">
-              <Wiki />
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div>
-          <div className="card">
-            <div className="card-header">
-              <h2>Calendar</h2>
-            </div>
-            <div className="card-body">
-              <Calendar />
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <h2>Habits</h2>
-            </div>
-            <div className="card-body">
-              <Habits />
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <h2>Weekly Stats</h2>
-            </div>
-            <div className="card-body">
-              <Stats />
+              <p>Your personal knowledge base.</p>
+              <button onClick={() => navigate("/wiki")}>
+                Open Wiki
+              </button>
             </div>
           </div>
 
@@ -119,7 +117,10 @@ export default function Dashboard({ theme, setTheme }: DashboardProps) {
               <h2>Media</h2>
             </div>
             <div className="card-body">
-              <Media />
+              <p>Books, films, shows, and more.</p>
+              <button onClick={() => navigate("/media")}>
+                Open Media
+              </button>
             </div>
           </div>
         </div>

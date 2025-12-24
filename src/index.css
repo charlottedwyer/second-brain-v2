@@ -156,3 +156,10 @@ textarea {
     width: 100%;
   }
 }
+.dashboard-card-actions {
+  margin-top: 12px;
+}
+
+.dashboard-card-actions button {
+  width: 100%;
+}

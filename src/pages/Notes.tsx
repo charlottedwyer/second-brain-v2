@@ -1,175 +1,81 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import RichTextEditor from "../components/RichTextEditor";
-import Notebooks from "./Notebooks";
+import NotesInNotebook from "./NotesInNotebook";
 
-type Note = {
+type Notebook = {
   id: string;
-  title: string;
-  content: string;
-  notebook_id: string | null;
-  created_at: string;
+  name: string;
 };
 
-type Props = {
-  notebookId: string | null;
-};
-
-export default function Notes({ notebookId }: Props) {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [selected, setSelected] = useState<Note | null>(null);
-  const [content, setContent] = useState("");
-  const [title, setTitle] = useState("");
+export default function Notes() {
+  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
+  const [activeNotebook, setActiveNotebook] = useState<Notebook | null>(null);
 
   useEffect(() => {
-    fetchNotes();
-  }, [notebookId]);
+    fetchNotebooks();
+  }, []);
 
-  async function fetchNotes() {
-    let q = supabase
-      .from("notes")
+  async function fetchNotebooks() {
+    const { data } = await supabase
+      .from("notebooks")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
 
-    if (notebookId) q = q.eq("notebook_id", notebookId);
-
-    const { data } = await q;
-    if (data) setNotes(data);
+    if (data) setNotebooks(data);
   }
 
-  async function createNote() {
+  async function createNotebook() {
+    const name = prompt("Notebook name");
+    if (!name) return;
+
     const { data } = await supabase
-      .from("notes")
-      .insert([
-        {
-          title: "Untitled note",
-          content: "",
-          notebook_id: notebookId,
-        },
-      ])
+      .from("notebooks")
+      .insert([{ name }])
       .select()
       .single();
 
     if (data) {
-      setNotes([data, ...notes]);
-      setSelected(data);
-      setTitle(data.title);
-      setContent("");
+      setNotebooks([...notebooks, data]);
     }
   }
 
-  async function saveNote() {
-    if (!selected) return;
-
-    await supabase
-      .from("notes")
-      .update({
-        title,
-        content,
-      })
-      .eq("id", selected.id);
-
-    fetchNotes();
+  // 🔙 inside notebook view
+  if (activeNotebook) {
+    return (
+      <NotesInNotebook
+        notebook={activeNotebook}
+        onBack={() => setActiveNotebook(null)}
+      />
+    );
   }
 
-  async function deleteNote(id: string) {
-    const confirmDelete = confirm("Delete this note?");
-    if (!confirmDelete) return;
-
-    await supabase.from("notes").delete().eq("id", id);
-    setSelected(null);
-    fetchNotes();
-  }
-
+  // 📓 notebook grid view
   return (
     <div className="page-container">
-      {/* PAGE HEADER */}
       <header className="page-header">
         <div>
-          <h1>Notes</h1>
+          <h1>Notebooks</h1>
           <p className="page-subtitle">
-            Write, organise, and revisit your thoughts.
+            Organise your notes into notebooks.
           </p>
         </div>
 
         <div className="page-actions">
-          <button onClick={createNote}>New note</button>
+          <button onClick={createNotebook}>New notebook</button>
         </div>
       </header>
 
-      <div className="split-layout">
-        {/* SIDEBAR */}
-        <aside className={`split-list ${selected ? "mobile-hidden" : ""}`}>
-          <Notebooks
-            activeNotebook={notebookId}
-            onSelect={() => {}}
-          />
-
-          {notes.map((n) => (
-            <div
-              key={n.id}
-              onClick={() => {
-                setSelected(n);
-                setTitle(n.title);
-                setContent(n.content || "");
-              }}
-              style={{
-                padding: 10,
-                cursor: "pointer",
-                borderRadius: 6,
-                background:
-                  selected?.id === n.id
-                    ? "var(--border)"
-                    : "transparent",
-              }}
-            >
-              <strong>{n.title}</strong>
-            </div>
-          ))}
-        </aside>
-
-        {/* EDITOR */}
-        <main className={`split-editor ${!selected ? "mobile-hidden" : ""}`}>
-          {selected ? (
-            <>
-              <button onClick={() => setSelected(null)}>← Back</button>
-
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                style={{
-                  fontSize: 20,
-                  fontWeight: 600,
-                  marginBottom: 12,
-                }}
-              />
-
-              <RichTextEditor
-                value={content}
-                onChange={setContent}
-              />
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  marginTop: 16,
-                }}
-              >
-                <button onClick={saveNote}>Save</button>
-                <button
-                  onClick={() => deleteNote(selected.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            </>
-          ) : (
-            <p style={{ opacity: 0.6 }}>
-              Select or create a note.
-            </p>
-          )}
-        </main>
+      <div className="notebook-grid">
+        {notebooks.map((nb, i) => (
+          <div
+            key={nb.id}
+            className="notebook-card"
+            onClick={() => setActiveNotebook(nb)}
+          >
+            <div className={`notebook-cover cover-${i % 6}`} />
+            <div className="notebook-title">{nb.name}</div>
+          </div>
+        ))}
       </div>
     </div>
   );

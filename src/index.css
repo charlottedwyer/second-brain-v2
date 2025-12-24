@@ -262,3 +262,31 @@ textarea {
     padding-bottom: 70px; /* space for nav */
   }
 }
+.notebook-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+.notebook-card {
+  cursor: pointer;
+  text-align: center;
+}
+
+.notebook-cover {
+  height: 140px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+/* fake notebook covers */
+.cover-0 { background: linear-gradient(135deg, #fde68a, #fca5a5); }
+.cover-1 { background: linear-gradient(135deg, #bfdbfe, #a5b4fc); }
+.cover-2 { background: linear-gradient(135deg, #bbf7d0, #86efac); }
+.cover-3 { background: linear-gradient(135deg, #fecaca, #fda4af); }
+.cover-4 { background: linear-gradient(135deg, #e9d5ff, #c4b5fd); }
+.cover-5 { background: linear-gradient(135deg, #fde68a, #fcd34d); }
+
+.notebook-title {
+  font-weight: 500;
+}

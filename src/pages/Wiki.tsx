@@ -33,19 +33,26 @@ export default function Wiki() {
   }
 
   async function createPage() {
-    const { data } = await supabase
-      .from("wiki_pages")
-      .insert([{ title: "Untitled page", content: "" }])
-      .select()
-      .single();
+  const { data, error } = await supabase
+    .from("wiki_pages")
+    .insert([{ title: "Untitled page", content: "" }])
+    .select()
+    .single();
 
-    if (data) {
-      setPages([data, ...pages]);
-      setSelected(data);
-      setTitle(data.title);
-      setContent("");
-    }
+  if (error) {
+    console.error("Create wiki page failed:", error);
+    alert(error.message);
+    return;
   }
+
+  if (data) {
+    setPages((prev) => [data, ...prev]);
+    setSelected(data);
+    setTitle(data.title);
+    setContent("");
+  }
+}
+
 
   async function savePage() {
     if (!selected) return;

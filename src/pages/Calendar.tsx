@@ -13,12 +13,10 @@ function getMonthDays(year: number, month: number) {
 
   const days: (Date | null)[] = [];
 
-  // pad start
   for (let i = 0; i < firstDay.getDay(); i++) {
     days.push(null);
   }
 
-  // days in month
   for (let d = 1; d <= lastDay.getDate(); d++) {
     days.push(new Date(year, month, d));
   }
@@ -78,62 +76,72 @@ export default function Calendar() {
   );
 
   return (
-    <div>
-      {/* HEADER */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 12,
-        }}
-      >
-        <button
-          onClick={() =>
-            setCurrentMonth(
-              new Date(
-                currentMonth.getFullYear(),
-                currentMonth.getMonth() - 1,
-                1
+    <div className="page-container">
+      {/* PAGE HEADER */}
+      <header className="page-header">
+        <div>
+          <h1>Calendar</h1>
+          <p className="page-subtitle">
+            Plan ahead, track events, stay oriented.
+          </p>
+        </div>
+
+        <div className="page-actions">
+          <button
+            onClick={() =>
+              setCurrentMonth(
+                new Date(
+                  currentMonth.getFullYear(),
+                  currentMonth.getMonth() - 1,
+                  1
+                )
               )
-            )
-          }
-        >
-          ◀
-        </button>
+            }
+          >
+            ◀
+          </button>
 
-        <strong>
-          {currentMonth.toLocaleString("default", {
-            month: "long",
-            year: "numeric",
-          })}
-        </strong>
+          <strong style={{ alignSelf: "center" }}>
+            {currentMonth.toLocaleString("default", {
+              month: "long",
+              year: "numeric",
+            })}
+          </strong>
 
-        <button
-          onClick={() =>
-            setCurrentMonth(
-              new Date(
-                currentMonth.getFullYear(),
-                currentMonth.getMonth() + 1,
-                1
+          <button
+            onClick={() =>
+              setCurrentMonth(
+                new Date(
+                  currentMonth.getFullYear(),
+                  currentMonth.getMonth() + 1,
+                  1
+                )
               )
-            )
-          }
-        >
-          ▶
-        </button>
-      </div>
+            }
+          >
+            ▶
+          </button>
+        </div>
+      </header>
 
-      {/* GRID */}
+      {/* CALENDAR GRID */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
-          gap: 6,
+          gap: 8,
+          marginBottom: 24,
         }}
       >
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-          <div key={d} style={{ textAlign: "center", opacity: 0.6 }}>
+          <div
+            key={d}
+            style={{
+              textAlign: "center",
+              opacity: 0.6,
+              fontSize: 13,
+            }}
+          >
             {d}
           </div>
         ))}
@@ -152,9 +160,9 @@ export default function Calendar() {
               key={i}
               onClick={() => dateStr && setSelectedDate(dateStr)}
               style={{
-                minHeight: 60,
-                padding: 6,
-                borderRadius: 8,
+                minHeight: 80,
+                padding: 8,
+                borderRadius: 12,
                 border: "1px solid var(--border)",
                 background:
                   selectedDate === dateStr
@@ -166,11 +174,12 @@ export default function Calendar() {
             >
               {day && (
                 <>
-                  <div style={{ fontSize: 12 }}>
+                  <div style={{ fontSize: 12, marginBottom: 4 }}>
                     {day.getDate()}
                   </div>
+
                   {dayEvents.length > 0 && (
-                    <div style={{ fontSize: 10, opacity: 0.7 }}>
+                    <div style={{ fontSize: 11, opacity: 0.7 }}>
                       {dayEvents.length} event
                       {dayEvents.length > 1 ? "s" : ""}
                     </div>
@@ -184,26 +193,31 @@ export default function Calendar() {
 
       {/* EVENT PANEL */}
       {selectedDate && (
-        <div style={{ marginTop: 16 }}>
-          <strong>
-            Events on{" "}
-            {new Date(selectedDate).toDateString()}
-          </strong>
+        <div className="card">
+          <div className="card-header">
+            <h2>
+              {new Date(selectedDate).toDateString()}
+            </h2>
+          </div>
 
-          <ul>
-            {events
-              .filter((e) => e.date === selectedDate)
-              .map((e) => (
-                <li key={e.id}>{e.title}</li>
-              ))}
-          </ul>
+          <div className="card-body">
+            <ul>
+              {events
+                .filter((e) => e.date === selectedDate)
+                .map((e) => (
+                  <li key={e.id}>{e.title}</li>
+                ))}
+            </ul>
 
-          <input
-            placeholder="Event title"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-          />
-          <button onClick={addEvent}>Add</button>
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <input
+                placeholder="Event title"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+              />
+              <button onClick={addEvent}>Add</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

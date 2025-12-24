@@ -2,151 +2,122 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 type Medication = {
-  id: number;
+  id: string;
   name: string;
-};
-
-type Schedule = {
-  id: number;
-  medication_id: number;
-  time: string; // HH:MM
+  dosage: string | null;
+  times: string[];
 };
 
 type Log = {
-  medication_id: number;
+  medication_id: string;
   time: string;
+  status: "pending" | "taken" | "skipped";
 };
 
 export default function Medications() {
   const today = new Date().toISOString().split("T")[0];
 
-  const [medications, setMedications] = useState<Medication[]>([]);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [meds, setMeds] = useState<Medication[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
-  const [newName, setNewName] = useState("");
 
   useEffect(() => {
-    fetchAll();
+    fetchData();
   }, []);
 
-  async function fetchAll() {
-    const { data: meds } = await supabase
+  async function fetchData() {
+    const { data: medsData } = await supabase
       .from("medications")
-      .select("*")
-      .order("name");
-
-    const { data: sched } = await supabase
-      .from("medication_schedules")
       .select("*");
 
-    const { data: logged } = await supabase
+    const { data: logsData } = await supabase
       .from("medication_logs")
-      .select("medication_id, time")
+      .select("*")
       .eq("date", today);
 
-    if (meds) setMedications(meds);
-    if (sched) setSchedules(sched);
-    if (logged) setLogs(logged);
+    setMeds(medsData || []);
+    setLogs(logsData || []);
   }
 
-  async function addMedication() {
-    if (!newName) return;
-
-    await supabase.from("medications").insert([
-      {
-        name: newName,
-      },
-    ]);
-
-    setNewName("");
-    fetchAll();
-  }
-
-  async function markTaken(medication_id: number, time: string) {
-    await supabase.from("medication_logs").insert([
-      {
-        medication_id,
-        time,
-        date: today,
-        taken_at: new Date().toISOString(),
-      },
-    ]);
-
-    fetchAll();
-  }
-
-  function isTaken(medication_id: number, time: string) {
-    return logs.some(
-      (l) => l.medication_id === medication_id && l.time === time
+  function getStatus(medId: string, time: string) {
+    return (
+      logs.find(
+        (l) => l.medication_id === medId && l.time === time
+      )?.status || "pending"
     );
+  }
+
+  async function mark(
+    medId: string,
+    time: string,
+    status: "taken" | "skipped"
+  ) {
+    await supabase.from("medication_logs").upsert([
+      {
+        medication_id: medId,
+        date: today,
+        time,
+        status,
+      },
+    ]);
+
+    fetchData();
   }
 
   return (
     <div>
-      <h2>Medications — Today</h2>
+      {meds.map((m) => (
+        <div key={m.id} className="card">
+          <strong>{m.name}</strong>
+          {m.dosage && <p>{m.dosage}</p>}
 
-      {/* ADD MED */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <input
-          placeholder="Medication name"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-        />
-        <button onClick={addMedication}>Add</button>
-      </div>
+          {m.times.map((t) => {
+            const status = getStatus(m.id, t);
 
-      {/* TODAY LIST */}
-      {medications.map((med) => {
-        const medSchedules = schedules.filter(
-          (s) => s.medication_id === med.id
-        );
+            return (
+              <div
+                key={t}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 8,
+                }}
+              >
+                <span style={{ width: 60 }}>{t}</span>
 
-        if (medSchedules.length === 0) return null;
-
-        return (
-          <div
-            key={med.id}
-            style={{
-              border: "1px solid var(--border)",
-              borderRadius: 10,
-              padding: 12,
-              marginBottom: 12,
-            }}
-          >
-            <strong>{med.name}</strong>
-
-            <div style={{ marginTop: 8 }}>
-              {medSchedules.map((s) => {
-                const taken = isTaken(med.id, s.time);
-
-                return (
-                  <div
-                    key={s.id}
+                {status === "pending" ? (
+                  <>
+                    <button
+                      onClick={() => mark(m.id, t, "taken")}
+                    >
+                      Taken
+                    </button>
+                    <button
+                      className="secondary"
+                      onClick={() => mark(m.id, t, "skipped")}
+                    >
+                      Skipped
+                    </button>
+                  </>
+                ) : (
+                  <span
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginTop: 6,
+                      color:
+                        status === "taken"
+                          ? "green"
+                          : "var(--muted)",
                     }}
                   >
-                    <span>{s.time}</span>
-
-                    <button
-                      disabled={taken}
-                      onClick={() => markTaken(med.id, s.time)}
-                      style={{
-                        opacity: taken ? 0.5 : 1,
-                      }}
-                    >
-                      {taken ? "Taken" : "Mark taken"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
+                    {status === "taken"
+                      ? "✓ Taken"
+                      : "Skipped"}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }

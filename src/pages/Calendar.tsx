@@ -5,14 +5,18 @@ import { supabase } from "../lib/supabaseClient";
    TYPES
    ===================== */
 
+type Recurrence = "none" | "daily" | "weekly";
+type ViewMode = "month" | "week" | "agenda";
+
 type CalendarEvent = {
   id: number;
   title: string;
-  date: string; // YYYY-MM-DD (LOCAL)
-  color: string; // hex or named colour
+  date: string; // YYYY-MM-DD
+  start_time: string | null; // HH:MM
+  duration_minutes: number | null;
+  recurrence: Recurrence;
+  color: string;
 };
-
-type ViewMode = "month" | "week" | "agenda";
 
 /* =====================
    DATE HELPERS (LOCAL SAFE)
@@ -25,21 +29,15 @@ function toLocalDateString(date: Date) {
   return `${y}-${m}-${d}`;
 }
 
-function getMonthDays(year: number, month: number) {
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
 
-  const days: (Date | null)[] = [];
-
-  for (let i = 0; i < firstDay.getDay(); i++) {
-    days.push(null);
-  }
-
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    days.push(new Date(year, month, d));
-  }
-
-  return days;
+function getWeekDays(base: Date) {
+  const start = addDays(base, -base.getDay());
+  return Array.from({ length: 7 }, (_, i) => addDays(start, i));
 }
 
 /* =====================
@@ -50,33 +48,29 @@ export default function Calendar() {
   const today = new Date();
 
   const [view, setView] = useState<ViewMode>("month");
-  const [currentMonth, setCurrentMonth] = useState(
-    new Date(today.getFullYear(), today.getMonth(), 1)
-  );
+  const [anchorDate, setAnchorDate] = useState(today);
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  const [newTitle, setNewTitle] = useState("");
-  const [newColor, setNewColor] = useState("#7c83ff");
+  // new event form
+  const [title, setTitle] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
+  const [duration, setDuration] = useState(60);
+  const [recurrence, setRecurrence] = useState<Recurrence>("none");
+  const [color, setColor] = useState("#7c83ff");
 
   useEffect(() => {
     fetchEvents();
-  }, [currentMonth]);
+  }, [anchorDate]);
 
   /* =====================
      DATA
      ===================== */
 
   async function fetchEvents() {
-    const start = toLocalDateString(currentMonth);
-    const end = toLocalDateString(
-      new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth() + 1,
-        0
-      )
-    );
+    const start = toLocalDateString(addDays(anchorDate, -30));
+    const end = toLocalDateString(addDays(anchorDate, 30));
 
     const { data } = await supabase
       .from("calendar_events")
@@ -88,36 +82,50 @@ export default function Calendar() {
   }
 
   async function addEvent() {
-    if (!selectedDate || !newTitle) return;
+    if (!selectedDate || !title) return;
 
     await supabase.from("calendar_events").insert([
       {
-        title: newTitle,
+        title,
         date: selectedDate,
-        color: newColor,
+        start_time: startTime,
+        duration_minutes: duration,
+        recurrence,
+        color,
       },
     ]);
 
-    setNewTitle("");
+    setTitle("");
     fetchEvents();
   }
 
   /* =====================
-     RENDER HELPERS
+     DERIVED EVENTS (RECURRING)
      ===================== */
 
-  const days = getMonthDays(
-    currentMonth.getFullYear(),
-    currentMonth.getMonth()
-  );
+  function expandRecurringEvents(baseDate: string) {
+    return events.filter((e) => {
+      if (e.date === baseDate) return true;
 
-  const eventsForSelectedDay = events.filter(
-    (e) => e.date === selectedDate
-  );
+      if (e.recurrence === "daily") return e.date <= baseDate;
+
+      if (e.recurrence === "weekly") {
+        const base = new Date(e.date);
+        const target = new Date(baseDate);
+        return (
+          base <= target && base.getDay() === target.getDay()
+        );
+      }
+
+      return false;
+    });
+  }
 
   /* =====================
-     UI
+     WEEK VIEW
      ===================== */
+
+  const weekDays = getWeekDays(anchorDate);
 
   return (
     <div className="page-container">
@@ -126,7 +134,7 @@ export default function Calendar() {
         <div>
           <h1>Calendar</h1>
           <p className="page-subtitle">
-            Plan ahead, track events, stay oriented.
+            Schedule your time, not just your days.
           </p>
         </div>
 
@@ -140,108 +148,73 @@ export default function Calendar() {
             <option value="agenda">Agenda</option>
           </select>
 
-          <button
-            onClick={() =>
-              setCurrentMonth(
-                new Date(
-                  currentMonth.getFullYear(),
-                  currentMonth.getMonth() - 1,
-                  1
-                )
-              )
-            }
-          >
+          <button onClick={() => setAnchorDate(addDays(anchorDate, -7))}>
             ◀
           </button>
 
-          <strong>
-            {currentMonth.toLocaleString("default", {
-              month: "long",
-              year: "numeric",
-            })}
-          </strong>
+          <strong>{toLocalDateString(anchorDate)}</strong>
 
-          <button
-            onClick={() =>
-              setCurrentMonth(
-                new Date(
-                  currentMonth.getFullYear(),
-                  currentMonth.getMonth() + 1,
-                  1
-                )
-              )
-            }
-          >
+          <button onClick={() => setAnchorDate(addDays(anchorDate, 7))}>
             ▶
           </button>
         </div>
       </header>
 
       {/* =====================
-         MONTH VIEW
+         WEEK VIEW
          ===================== */}
-      {view === "month" && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
-            gap: 8,
-            marginBottom: 24,
-          }}
-        >
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-            <div
-              key={d}
-              style={{ textAlign: "center", opacity: 0.6, fontSize: 13 }}
-            >
-              {d}
+      {view === "week" && (
+        <div style={{ display: "grid", gridTemplateColumns: "80px repeat(7, 1fr)" }}>
+          <div />
+
+          {weekDays.map((d) => (
+            <div key={d.toString()} style={{ textAlign: "center" }}>
+              <strong>{d.toLocaleDateString(undefined, { weekday: "short" })}</strong>
+              <div style={{ opacity: 0.6 }}>{d.getDate()}</div>
             </div>
           ))}
 
-          {days.map((day, i) => {
-            if (!day) {
-              return <div key={i} />;
-            }
-
-            const dateStr = toLocalDateString(day);
-            const dayEvents = events.filter(
-              (e) => e.date === dateStr
-            );
-
-            return (
-              <div
-                key={i}
-                onClick={() => setSelectedDate(dateStr)}
-                style={{
-                  minHeight: 90,
-                  padding: 8,
-                  borderRadius: 12,
-                  border: "1px solid var(--border)",
-                  background:
-                    selectedDate === dateStr
-                      ? "var(--border)"
-                      : "var(--card)",
-                  cursor: "pointer",
-                }}
-              >
-                <div style={{ fontSize: 12, marginBottom: 6 }}>
-                  {day.getDate()}
-                </div>
-
-                {dayEvents.map((e) => (
-                  <div
-                    key={e.id}
-                    style={{
-                      height: 6,
-                      borderRadius: 4,
-                      background: e.color,
-                      marginBottom: 4,
-                    }}
-                  />
-                ))}
+          {Array.from({ length: 24 }).map((_, hour) => (
+            <>
+              <div key={`h-${hour}`} style={{ fontSize: 12, opacity: 0.6 }}>
+                {hour}:00
               </div>
-            );
-          })}
+
+              {weekDays.map((d) => {
+                const dateStr = toLocalDateString(d);
+                const dayEvents = expandRecurringEvents(dateStr).filter(
+                  (e) => e.start_time?.startsWith(String(hour).padStart(2, "0"))
+                );
+
+                return (
+                  <div
+                    key={dateStr + hour}
+                    onClick={() => setSelectedDate(dateStr)}
+                    style={{
+                      border: "1px solid var(--border)",
+                      minHeight: 40,
+                      padding: 2,
+                    }}
+                  >
+                    {dayEvents.map((e) => (
+                      <div
+                        key={e.id}
+                        style={{
+                          background: e.color,
+                          color: "#fff",
+                          borderRadius: 4,
+                          padding: "2px 4px",
+                          fontSize: 11,
+                        }}
+                      >
+                        {e.title}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </>
+          ))}
         </div>
       )}
 
@@ -252,25 +225,10 @@ export default function Calendar() {
         <div className="card">
           <div className="card-body">
             {events.map((e) => (
-              <div
-                key={e.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 8,
-                }}
-              >
-                <span
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: e.color,
-                  }}
-                />
-                <strong>{e.title}</strong>
-                <span style={{ opacity: 0.6 }}>{e.date}</span>
+              <div key={e.id} style={{ marginBottom: 8 }}>
+                <span style={{ color: e.color }}>●</span>{" "}
+                <strong>{e.title}</strong> — {e.date}{" "}
+                {e.start_time && `@ ${e.start_time}`}
               </div>
             ))}
           </div>
@@ -278,45 +236,51 @@ export default function Calendar() {
       )}
 
       {/* =====================
-         EVENT PANEL
+         EVENT CREATION
          ===================== */}
       {selectedDate && (
         <div className="card">
           <div className="card-header">
-            <h2>{selectedDate}</h2>
+            <h2>Add event — {selectedDate}</h2>
           </div>
 
           <div className="card-body">
-            <ul>
-              {eventsForSelectedDay.map((e) => (
-                <li key={e.id} style={{ color: e.color }}>
-                  {e.title}
-                </li>
-              ))}
-            </ul>
+            <input
+              placeholder="Event title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
 
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginTop: 12,
-                alignItems: "center",
-              }}
+            <input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+
+            <input
+              type="number"
+              min={15}
+              step={15}
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+            />
+
+            <select
+              value={recurrence}
+              onChange={(e) => setRecurrence(e.target.value as Recurrence)}
             >
-              <input
-                placeholder="Event title"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-              />
+              <option value="none">One-time</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
 
-              <input
-                type="color"
-                value={newColor}
-                onChange={(e) => setNewColor(e.target.value)}
-              />
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+            />
 
-              <button onClick={addEvent}>Add</button>
-            </div>
+            <button onClick={addEvent}>Add event</button>
           </div>
         </div>
       )}

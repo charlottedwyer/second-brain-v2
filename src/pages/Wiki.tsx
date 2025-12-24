@@ -2,16 +2,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import RichTextEditor from "../components/RichTextEditor";
 
-type WikiPage = {
+type Page = {
   id: number;
   title: string;
   content: string;
-  created_at: string;
 };
 
 export default function Wiki() {
-  const [pages, setPages] = useState<WikiPage[]>([]);
-  const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
+  const [pages, setPages] = useState<Page[]>([]);
+  const [selected, setSelected] = useState<Page | null>(null);
   const [content, setContent] = useState("");
 
   useEffect(() => {
@@ -27,75 +26,43 @@ export default function Wiki() {
     if (data) setPages(data);
   }
 
-  async function createPage() {
-    const { data } = await supabase
-      .from("wiki_pages")
-      .insert([{ title: "New Page", content: "" }])
-      .select()
-      .single();
-
-    if (data) {
-      setPages([data, ...pages]);
-      setSelectedPage(data);
-      setContent("");
-    }
-  }
-
-  async function savePage() {
-    if (!selectedPage) return;
-
+  async function save() {
+    if (!selected) return;
     await supabase
       .from("wiki_pages")
       .update({ content })
-      .eq("id", selectedPage.id);
-
-    setPages((prev) =>
-      prev.map((p) =>
-        p.id === selectedPage.id ? { ...p, content } : p
-      )
-    );
+      .eq("id", selected.id);
   }
 
   return (
     <div>
-      <button onClick={createPage}>New Page</button>
+      <button onClick={() => setSelected(null)}>New Page</button>
 
-      <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
-        {/* PAGE LIST */}
-        <div style={{ width: 220 }}>
-          {pages.map((page) => (
+      <div className="split-layout">
+        {/* LIST */}
+        <div className={`split-list ${selected ? "mobile-hidden" : ""}`}>
+          {pages.map((p) => (
             <div
-              key={page.id}
+              key={p.id}
               onClick={() => {
-                setSelectedPage(page);
-                setContent(page.content || "");
+                setSelected(p);
+                setContent(p.content || "");
               }}
-              style={{
-                padding: 8,
-                cursor: "pointer",
-                borderRadius: 6,
-                background:
-                  selectedPage?.id === page.id
-                    ? "var(--border)"
-                    : "transparent",
-              }}
+              style={{ padding: 10, cursor: "pointer" }}
             >
-              <strong>{page.title}</strong>
+              <strong>{p.title}</strong>
             </div>
           ))}
         </div>
 
         {/* EDITOR */}
-        <div style={{ flex: 1 }}>
-          {selectedPage ? (
+        <div className={`split-editor ${!selected ? "mobile-hidden" : ""}`}>
+          {selected && (
             <>
+              <button onClick={() => setSelected(null)}>← Back</button>
               <RichTextEditor value={content} onChange={setContent} />
-              <button style={{ marginTop: 12 }} onClick={savePage}>
-                Save
-              </button>
+              <button onClick={save}>Save</button>
             </>
-          ) : (
-            <p style={{ opacity: 0.6 }}>Select a page to edit</p>
           )}
         </div>
       </div>

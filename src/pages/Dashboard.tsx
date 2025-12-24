@@ -18,12 +18,8 @@ type DashboardProps = {
   setTheme: (t: string) => void;
 };
 
-export default function Dashboard({
-  theme,
-  setTheme,
-}: DashboardProps) {
-  const [activeNotebook, setActiveNotebook] =
-    useState<string | null>(null);
+export default function Dashboard({ theme, setTheme }: DashboardProps) {
+  const [activeNotebook, setActiveNotebook] = useState<string | null>(null);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -38,6 +34,7 @@ export default function Dashboard({
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 32,
+          gap: 16,
         }}
       >
         <div>
@@ -47,13 +44,13 @@ export default function Dashboard({
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <ThemePicker theme={theme} setTheme={setTheme} />
           <button onClick={signOut}>Log out</button>
         </div>
       </header>
 
-      {/* SEARCH / QUICK CAPTURE / TODAY */}
+      {/* TODAY */}
       <div className="card">
         <div className="card-body">
           <Today />
@@ -61,14 +58,7 @@ export default function Dashboard({
       </div>
 
       {/* MAIN GRID */}
-      <div
-        className="dashboard-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: 24,
-        }}
-      >
+      <div className="dashboard-grid">
         {/* LEFT COLUMN */}
         <div>
           <div className="card">

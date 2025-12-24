@@ -78,8 +78,8 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
 }
 
 p {
@@ -97,6 +97,14 @@ p {
 .card-header h2 {
   margin: 0;
   font-size: 1.05rem;
+}
+
+/* ✅ Desktop dashboard grid (so mobile media query works) */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: start;
 }
 
 button {

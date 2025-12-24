@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import RichTextEditor from "../components/RichTextEditor";
+import Notebooks from "./Notebooks";
 
 type Note = {
-  id: number;
+  id: string;
   title: string;
   content: string;
+  notebook_id: string | null;
   created_at: string;
 };
 
@@ -17,15 +19,13 @@ export default function Notes({ notebookId }: Props) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selected, setSelected] = useState<Note | null>(null);
   const [content, setContent] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
     fetchNotes();
   }, [notebookId]);
 
   async function fetchNotes() {
-    setLoading(true);
-
     let q = supabase
       .from("notes")
       .select("*")
@@ -35,31 +35,50 @@ export default function Notes({ notebookId }: Props) {
 
     const { data } = await q;
     if (data) setNotes(data);
-
-    setLoading(false);
   }
 
   async function createNote() {
     const { data } = await supabase
       .from("notes")
-      .insert([{ title: "Untitled note", content: "" }])
+      .insert([
+        {
+          title: "Untitled note",
+          content: "",
+          notebook_id: notebookId,
+        },
+      ])
       .select()
       .single();
 
     if (data) {
       setNotes([data, ...notes]);
       setSelected(data);
+      setTitle(data.title);
       setContent("");
     }
   }
 
-  async function save() {
+  async function saveNote() {
     if (!selected) return;
 
     await supabase
       .from("notes")
-      .update({ content })
+      .update({
+        title,
+        content,
+      })
       .eq("id", selected.id);
+
+    fetchNotes();
+  }
+
+  async function deleteNote(id: string) {
+    const confirmDelete = confirm("Delete this note?");
+    if (!confirmDelete) return;
+
+    await supabase.from("notes").delete().eq("id", id);
+    setSelected(null);
+    fetchNotes();
   }
 
   return (
@@ -69,7 +88,7 @@ export default function Notes({ notebookId }: Props) {
         <div>
           <h1>Notes</h1>
           <p className="page-subtitle">
-            Write, think, plan — everything in one place.
+            Write, organise, and revisit your thoughts.
           </p>
         </div>
 
@@ -78,28 +97,30 @@ export default function Notes({ notebookId }: Props) {
         </div>
       </header>
 
-      {/* CONTENT */}
       <div className="split-layout">
-        {/* LIST */}
+        {/* SIDEBAR */}
         <aside className={`split-list ${selected ? "mobile-hidden" : ""}`}>
-          {loading && <p>Loading…</p>}
+          <Notebooks
+            activeNotebook={notebookId}
+            onSelect={() => {}}
+          />
 
           {notes.map((n) => (
             <div
               key={n.id}
               onClick={() => {
                 setSelected(n);
+                setTitle(n.title);
                 setContent(n.content || "");
               }}
               style={{
-                padding: 12,
-                borderRadius: 8,
+                padding: 10,
                 cursor: "pointer",
+                borderRadius: 6,
                 background:
                   selected?.id === n.id
                     ? "var(--border)"
                     : "transparent",
-                marginBottom: 4,
               }}
             >
               <strong>{n.title}</strong>
@@ -111,23 +132,41 @@ export default function Notes({ notebookId }: Props) {
         <main className={`split-editor ${!selected ? "mobile-hidden" : ""}`}>
           {selected ? (
             <>
-              {/* MOBILE BACK */}
-              <button
-                onClick={() => setSelected(null)}
-                style={{ marginBottom: 12 }}
+              <button onClick={() => setSelected(null)}>← Back</button>
+
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                style={{
+                  fontSize: 20,
+                  fontWeight: 600,
+                  marginBottom: 12,
+                }}
+              />
+
+              <RichTextEditor
+                value={content}
+                onChange={setContent}
+              />
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  marginTop: 16,
+                }}
               >
-                ← Back
-              </button>
-
-              <RichTextEditor value={content} onChange={setContent} />
-
-              <div style={{ marginTop: 16 }}>
-                <button onClick={save}>Save</button>
+                <button onClick={saveNote}>Save</button>
+                <button
+                  onClick={() => deleteNote(selected.id)}
+                >
+                  Delete
+                </button>
               </div>
             </>
           ) : (
             <p style={{ opacity: 0.6 }}>
-              Select a note to start editing.
+              Select or create a note.
             </p>
           )}
         </main>

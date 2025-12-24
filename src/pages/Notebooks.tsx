@@ -6,178 +6,99 @@ type Notebook = {
   name: string;
 };
 
-const PROTECTED_NOTEBOOKS = ["Inbox", "Journal"];
-
-export default function Notebooks({
-  activeNotebook,
-  onSelect,
-}: {
+type Props = {
   activeNotebook: string | null;
   onSelect: (id: string | null) => void;
-}) {
+};
+
+export default function Notebooks({ activeNotebook, onSelect }: Props) {
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [newName, setNewName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
 
-  async function loadNotebooks() {
+  useEffect(() => {
+    fetchNotebooks();
+  }, []);
+
+  async function fetchNotebooks() {
     const { data } = await supabase
       .from("notebooks")
-      .select("id, name")
+      .select("*")
       .order("created_at", { ascending: true });
 
-    setNotebooks(data ?? []);
+    if (data) setNotebooks(data);
   }
 
   async function createNotebook() {
     if (!newName.trim()) return;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-
     const { data } = await supabase
       .from("notebooks")
-      .insert({
-        name: newName.trim(),
-        user_id: user.id,
-      })
+      .insert([{ name: newName }])
       .select()
       .single();
 
-    if (!data) return;
-
-    setNotebooks((prev) => [...prev, data]);
-    setNewName("");
-  }
-
-  async function renameNotebook(id: string) {
-    if (!editingName.trim()) return;
-
-    const { data } = await supabase
-      .from("notebooks")
-      .update({ name: editingName.trim() })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (!data) return;
-
-    setNotebooks((prev) =>
-      prev.map((n) => (n.id === id ? data : n))
-    );
-
-    setEditingId(null);
-    setEditingName("");
+    if (data) {
+      setNotebooks([...notebooks, data]);
+      setNewName("");
+      onSelect(data.id);
+    }
   }
 
   async function deleteNotebook(id: string) {
-    await supabase.from("notebooks").delete().eq("id", id);
-    setNotebooks((prev) => prev.filter((n) => n.id !== id));
-    onSelect(null);
-  }
+    const confirmDelete = confirm(
+      "Delete this notebook and all its notes?"
+    );
+    if (!confirmDelete) return;
 
-  useEffect(() => {
-    loadNotebooks();
-  }, []);
+    await supabase.from("notebooks").delete().eq("id", id);
+
+    if (activeNotebook === id) onSelect(null);
+    fetchNotebooks();
+  }
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <h3 style={{ marginBottom: 8 }}>Notebooks</h3>
+      <h3>Notebooks</h3>
 
-      {/* Create notebook */}
-      <div style={{ marginBottom: 12 }}>
-        <input
-          placeholder="New notebook"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-        />
-        <button onClick={createNotebook} style={{ marginLeft: 6 }}>
-          Create
-        </button>
+      <div style={{ marginBottom: 8 }}>
+        {notebooks.map((nb) => (
+          <div
+            key={nb.id}
+            style={{
+              padding: 8,
+              borderRadius: 6,
+              cursor: "pointer",
+              background:
+                activeNotebook === nb.id
+                  ? "var(--border)"
+                  : "transparent",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+            onClick={() => onSelect(nb.id)}
+          >
+            <span>{nb.name}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteNotebook(nb.id);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
       </div>
 
-      <ul>
-        {/* All notes */}
-        <li>
-          <button
-            onClick={() => onSelect(null)}
-            style={{
-              fontWeight: activeNotebook === null ? "bold" : "normal",
-            }}
-          >
-            All notes
-          </button>
-        </li>
-
-        {notebooks.map((nb) => {
-          const isProtected = PROTECTED_NOTEBOOKS.includes(nb.name);
-
-          return (
-            <li key={nb.id}>
-              {editingId === nb.id ? (
-                <>
-                  <input
-                    value={editingName}
-                    onChange={(e) =>
-                      setEditingName(e.target.value)
-                    }
-                  />
-                  <button
-                    onClick={() => renameNotebook(nb.id)}
-                    style={{ marginLeft: 6 }}
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingId(null);
-                      setEditingName("");
-                    }}
-                    style={{ marginLeft: 6 }}
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => onSelect(nb.id)}
-                    style={{
-                      fontWeight:
-                        activeNotebook === nb.id ? "bold" : "normal",
-                    }}
-                  >
-                    {nb.name}
-                  </button>
-
-                  {!isProtected && (
-                    <>
-                      <button
-                        onClick={() => {
-                          setEditingId(nb.id);
-                          setEditingName(nb.name);
-                        }}
-                        style={{ marginLeft: 6 }}
-                      >
-                        Rename
-                      </button>
-
-                      <button
-                        onClick={() => deleteNotebook(nb.id)}
-                        style={{ marginLeft: 6 }}
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      <input
+        placeholder="New notebook"
+        value={newName}
+        onChange={(e) => setNewName(e.target.value)}
+      />
+      <button onClick={createNotebook} style={{ marginTop: 6 }}>
+        Add notebook
+      </button>
     </div>
   );
 }

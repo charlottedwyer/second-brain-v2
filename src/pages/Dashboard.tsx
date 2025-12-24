@@ -17,9 +17,36 @@ export default function Dashboard({ theme, setTheme }: DashboardProps) {
   const [loading, setLoading] = useState(false);
 
   async function signOut() {
+    if (loading) return;
     setLoading(true);
     await supabase.auth.signOut();
     setLoading(false);
+  }
+
+  function QuickCard({
+    title,
+    description,
+    path,
+  }: {
+    title: string;
+    description: string;
+    path: string;
+  }) {
+    return (
+      <div
+        className="card"
+        onClick={() => navigate(path)}
+        style={{ cursor: "pointer" }}
+      >
+        <div className="card-header">
+          <h2>{title}</h2>
+        </div>
+        <div className="card-body">
+          <p>{description}</p>
+          <button onClick={() => navigate(path)}>Open</button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -53,7 +80,7 @@ export default function Dashboard({ theme, setTheme }: DashboardProps) {
 
       {/* QUICK ACCESS */}
       <div className="dashboard-grid">
-        {/* LEFT */}
+        {/* LEFT COLUMN */}
         <div>
           <div className="card">
             <div className="card-header">
@@ -74,55 +101,31 @@ export default function Dashboard({ theme, setTheme }: DashboardProps) {
           </div>
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT COLUMN */}
         <div>
-          <div className="card">
-            <div className="card-header">
-              <h2>Notes</h2>
-            </div>
-            <div className="card-body">
-              <p>Create and edit your notes.</p>
-              <button onClick={() => navigate("/notes")}>
-                Open Notes
-              </button>
-            </div>
-          </div>
+          <QuickCard
+            title="Notes"
+            description="Create and edit your notes."
+            path="/notes"
+          />
 
-          <div className="card">
-            <div className="card-header">
-              <h2>Calendar</h2>
-            </div>
-            <div className="card-body">
-              <p>View upcoming events.</p>
-              <button onClick={() => navigate("/calendar")}>
-                Open Calendar
-              </button>
-            </div>
-          </div>
+          <QuickCard
+            title="Calendar"
+            description="View upcoming events and schedules."
+            path="/calendar"
+          />
 
-          <div className="card">
-            <div className="card-header">
-              <h2>Wiki</h2>
-            </div>
-            <div className="card-body">
-              <p>Your personal knowledge base.</p>
-              <button onClick={() => navigate("/wiki")}>
-                Open Wiki
-              </button>
-            </div>
-          </div>
+          <QuickCard
+            title="Wiki"
+            description="Your personal knowledge base."
+            path="/wiki"
+          />
 
-          <div className="card">
-            <div className="card-header">
-              <h2>Media</h2>
-            </div>
-            <div className="card-body">
-              <p>Books, films, shows, and more.</p>
-              <button onClick={() => navigate("/media")}>
-                Open Media
-              </button>
-            </div>
-          </div>
+          <QuickCard
+            title="Media"
+            description="Books, films, shows, and more."
+            path="/media"
+          />
         </div>
       </div>
     </div>

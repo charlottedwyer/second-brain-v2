@@ -1,61 +1,35 @@
-import { useEffect, useState } from "react";
-import "./index.css";
-import { supabase } from "./lib/supabaseClient";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useState } from "react";
 
 import Dashboard from "./pages/Dashboard";
-import Auth from "./pages/Auth";
+import Notes from "./pages/Notes";
+import Wiki from "./pages/Wiki";
+import Calendar from "./pages/Calendar";
+import Habits from "./pages/Habits";
+import Media from "./pages/Media";
+import Stats from "./pages/Stats";
+
+import Navigation from "./components/Navigation";
 
 export default function App() {
-  const [theme, setTheme] = useState(
-    localStorage.getItem("theme") || "light"
+  const [theme, setTheme] = useState("light");
+
+  return (
+    <div data-theme={theme}>
+      <Navigation />
+
+      <Routes>
+        <Route path="/" element={<Dashboard theme={theme} setTheme={setTheme} />} />
+        <Route path="/notes" element={<Notes notebookId={null} />} />
+        <Route path="/wiki" element={<Wiki />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/habits" element={<Habits />} />
+        <Route path="/media" element={<Media />} />
+        <Route path="/stats" element={<Stats />} />
+
+        {/* fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </div>
   );
-
-  const [loadingSession, setLoadingSession] = useState(true);
-  const [signedIn, setSignedIn] = useState(false);
-
-  // Theme apply + persist
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  // Auth session bootstrap + listener
-  useEffect(() => {
-    let mounted = true;
-
-    async function bootstrap() {
-      const { data } = await supabase.auth.getSession();
-      if (!mounted) return;
-      setSignedIn(Boolean(data.session));
-      setLoadingSession(false);
-    }
-
-    bootstrap();
-
-    const { data: sub } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSignedIn(Boolean(session));
-        setLoadingSession(false);
-      }
-    );
-
-    return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
-
-  if (loadingSession) {
-    return (
-      <div style={{ padding: 24 }}>
-        <p style={{ opacity: 0.7 }}>Loading…</p>
-      </div>
-    );
-  }
-
-  if (!signedIn) {
-    return <Auth />;
-  }
-
-  return <Dashboard theme={theme} setTheme={setTheme} />;
 }

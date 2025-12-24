@@ -1,119 +1,211 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-type Event = {
-  id: string;
+type CalendarEvent = {
+  id: number;
   title: string;
-  event_date: string;
-  event_time: string | null;
-  notes: string | null;
+  date: string; // YYYY-MM-DD
 };
 
+function getMonthDays(year: number, month: number) {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  const days: (Date | null)[] = [];
+
+  // pad start
+  for (let i = 0; i < firstDay.getDay(); i++) {
+    days.push(null);
+  }
+
+  // days in month
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    days.push(new Date(year, month, d));
+  }
+
+  return days;
+}
+
 export default function Calendar() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [notes, setNotes] = useState("");
-
-  async function loadEvents() {
-    const { data } = await supabase
-      .from("calendar_events")
-      .select("id, title, event_date, event_time, notes")
-      .order("event_date", { ascending: true })
-      .order("event_time", { ascending: true });
-
-    setEvents(data ?? []);
-  }
-
-  async function createEvent() {
-    if (!title.trim() || !date) return;
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data } = await supabase
-      .from("calendar_events")
-      .insert({
-        title,
-        event_date: date,
-        event_time: time || null,
-        notes,
-        user_id: user.id,
-      })
-      .select()
-      .single();
-
-    if (!data) return;
-
-    setEvents((prev) => [...prev, data]);
-    setTitle("");
-    setDate("");
-    setTime("");
-    setNotes("");
-  }
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(
+    new Date(today.getFullYear(), today.getMonth(), 1)
+  );
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState("");
 
   useEffect(() => {
-    loadEvents();
-  }, []);
+    fetchEvents();
+  }, [currentMonth]);
+
+  async function fetchEvents() {
+    const start = currentMonth.toISOString().split("T")[0];
+    const end = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() + 1,
+      0
+    )
+      .toISOString()
+      .split("T")[0];
+
+    const { data } = await supabase
+      .from("calendar_events")
+      .select("*")
+      .gte("date", start)
+      .lte("date", end);
+
+    if (data) setEvents(data);
+  }
+
+  async function addEvent() {
+    if (!selectedDate || !newTitle) return;
+
+    await supabase.from("calendar_events").insert([
+      {
+        title: newTitle,
+        date: selectedDate,
+      },
+    ]);
+
+    setNewTitle("");
+    fetchEvents();
+  }
+
+  const days = getMonthDays(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth()
+  );
 
   return (
     <div>
-      <p style={{ opacity: 0.7, marginBottom: 12 }}>
-        Events, deadlines, plans.
-      </p>
+      {/* HEADER */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
+        <button
+          onClick={() =>
+            setCurrentMonth(
+              new Date(
+                currentMonth.getFullYear(),
+                currentMonth.getMonth() - 1,
+                1
+              )
+            )
+          }
+        >
+          ◀
+        </button>
 
-      {/* Add event */}
-      <div style={{ marginBottom: 16 }}>
-        <input
-          placeholder="Event title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <br />
+        <strong>
+          {currentMonth.toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          })}
+        </strong>
 
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          style={{ marginLeft: 6 }}
-        />
-
-        <br />
-
-        <textarea
-          placeholder="Notes (optional)"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={2}
-        />
-
-        <br />
-
-        <button onClick={createEvent}>Add event</button>
+        <button
+          onClick={() =>
+            setCurrentMonth(
+              new Date(
+                currentMonth.getFullYear(),
+                currentMonth.getMonth() + 1,
+                1
+              )
+            )
+          }
+        >
+          ▶
+        </button>
       </div>
 
-      {/* Event list */}
-      <ul>
-        {events.map((event) => (
-          <li key={event.id} style={{ marginBottom: 12 }}>
-            <strong>{event.title}</strong>
-            <div style={{ opacity: 0.7 }}>
-              {event.event_date}
-              {event.event_time && ` • ${event.event_time}`}
-            </div>
-            {event.notes && <p>{event.notes}</p>}
-          </li>
+      {/* GRID */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gap: 6,
+        }}
+      >
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+          <div key={d} style={{ textAlign: "center", opacity: 0.6 }}>
+            {d}
+          </div>
         ))}
-      </ul>
+
+        {days.map((day, i) => {
+          const dateStr = day
+            ? day.toISOString().split("T")[0]
+            : null;
+
+          const dayEvents = events.filter(
+            (e) => e.date === dateStr
+          );
+
+          return (
+            <div
+              key={i}
+              onClick={() => dateStr && setSelectedDate(dateStr)}
+              style={{
+                minHeight: 60,
+                padding: 6,
+                borderRadius: 8,
+                border: "1px solid var(--border)",
+                background:
+                  selectedDate === dateStr
+                    ? "var(--border)"
+                    : "var(--card)",
+                opacity: day ? 1 : 0,
+                cursor: day ? "pointer" : "default",
+              }}
+            >
+              {day && (
+                <>
+                  <div style={{ fontSize: 12 }}>
+                    {day.getDate()}
+                  </div>
+                  {dayEvents.length > 0 && (
+                    <div style={{ fontSize: 10, opacity: 0.7 }}>
+                      {dayEvents.length} event
+                      {dayEvents.length > 1 ? "s" : ""}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* EVENT PANEL */}
+      {selectedDate && (
+        <div style={{ marginTop: 16 }}>
+          <strong>
+            Events on{" "}
+            {new Date(selectedDate).toDateString()}
+          </strong>
+
+          <ul>
+            {events
+              .filter((e) => e.date === selectedDate)
+              .map((e) => (
+                <li key={e.id}>{e.title}</li>
+              ))}
+          </ul>
+
+          <input
+            placeholder="Event title"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+          />
+          <button onClick={addEvent}>Add</button>
+        </div>
+      )}
     </div>
   );
 }

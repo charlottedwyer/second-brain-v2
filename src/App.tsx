@@ -5,12 +5,12 @@ import Dashboard from "./pages/Dashboard";
 import Notes from "./pages/Notes";
 import Wiki from "./pages/Wiki";
 import Calendar from "./pages/Calendar";
-import Habits from "./pages/Habits";
 import Health from "./pages/Health";
 import Media from "./pages/Media";
 import Stats from "./pages/Stats";
 
 import Navigation from "./components/Navigation";
+import MobileNav from "./components/MobileNav";
 
 export default function App() {
   const [theme, setTheme] = useState("light");
@@ -24,13 +24,14 @@ export default function App() {
         <Route path="/notes" element={<Notes notebookId={null} />} />
         <Route path="/wiki" element={<Wiki />} />
         <Route path="/calendar" element={<Calendar />} />
-        <Route path="/habits" element={<Habits />} />
         <Route path="/health" element={<Health />} />
         <Route path="/media" element={<Media />} />
         <Route path="/stats" element={<Stats />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      <MobileNav />
     </div>
   );
 }

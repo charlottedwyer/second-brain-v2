@@ -225,3 +225,40 @@ textarea {
     font-size: 16px;
   }
 }
+/* =========================
+   MOBILE BOTTOM NAV
+   ========================= */
+
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    z-index: 100;
+  }
+
+  .mobile-nav-item {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  body {
+    padding-bottom: 70px; /* space for nav */
+  }
+}

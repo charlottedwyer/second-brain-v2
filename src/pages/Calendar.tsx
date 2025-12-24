@@ -35,6 +35,20 @@ function addDays(date: Date, days: number) {
   return d;
 }
 
+function getMonthDays(base: Date) {
+  const year = base.getFullYear();
+  const month = base.getMonth();
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+
+  const days: (Date | null)[] = [];
+  for (let i = 0; i < first.getDay(); i++) days.push(null);
+  for (let d = 1; d <= last.getDate(); d++)
+    days.push(new Date(year, month, d));
+
+  return days;
+}
+
 function getWeekDays(base: Date) {
   const start = addDays(base, -base.getDay());
   return Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -64,13 +78,9 @@ export default function Calendar() {
     fetchEvents();
   }, [anchorDate]);
 
-  /* =====================
-     DATA
-     ===================== */
-
   async function fetchEvents() {
-    const start = toLocalDateString(addDays(anchorDate, -30));
-    const end = toLocalDateString(addDays(anchorDate, 30));
+    const start = toLocalDateString(addDays(anchorDate, -31));
+    const end = toLocalDateString(addDays(anchorDate, 31));
 
     const { data } = await supabase
       .from("calendar_events")
@@ -100,26 +110,30 @@ export default function Calendar() {
   }
 
   /* =====================
-     DERIVED EVENTS (RECURRING)
+     RECURRENCE EXPANSION
      ===================== */
 
-  function expandRecurringEvents(baseDate: string) {
+  function eventsForDate(dateStr: string) {
     return events.filter((e) => {
-      if (e.date === baseDate) return true;
+      if (e.date === dateStr) return true;
 
-      if (e.recurrence === "daily") return e.date <= baseDate;
+      if (e.recurrence === "daily") return e.date <= dateStr;
 
       if (e.recurrence === "weekly") {
         const base = new Date(e.date);
-        const target = new Date(baseDate);
-        return (
-          base <= target && base.getDay() === target.getDay()
-        );
+        const target = new Date(dateStr);
+        return base <= target && base.getDay() === target.getDay();
       }
 
       return false;
     });
   }
+
+  /* =====================
+     MONTH VIEW
+     ===================== */
+
+  const monthDays = getMonthDays(anchorDate);
 
   /* =====================
      WEEK VIEW
@@ -161,30 +175,88 @@ export default function Calendar() {
       </header>
 
       {/* =====================
+         MONTH VIEW
+         ===================== */}
+      {view === "month" && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: 8,
+            marginBottom: 24,
+          }}
+        >
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            <div key={d} style={{ opacity: 0.6, fontSize: 13 }}>
+              {d}
+            </div>
+          ))}
+
+          {monthDays.map((d, i) => {
+            if (!d) return <div key={i} />;
+
+            const dateStr = toLocalDateString(d);
+            const dayEvents = eventsForDate(dateStr);
+
+            return (
+              <div
+                key={dateStr}
+                onClick={() => setSelectedDate(dateStr)}
+                style={{
+                  border: "1px solid var(--border)",
+                  borderRadius: 10,
+                  padding: 8,
+                  minHeight: 80,
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{ fontSize: 12 }}>{d.getDate()}</div>
+                {dayEvents.slice(0, 3).map((e) => (
+                  <div
+                    key={e.id}
+                    style={{
+                      height: 6,
+                      borderRadius: 4,
+                      background: e.color,
+                      marginTop: 4,
+                    }}
+                  />
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* =====================
          WEEK VIEW
          ===================== */}
       {view === "week" && (
-        <div style={{ display: "grid", gridTemplateColumns: "80px repeat(7, 1fr)" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "80px repeat(7, 1fr)",
+          }}
+        >
           <div />
 
           {weekDays.map((d) => (
-            <div key={d.toString()} style={{ textAlign: "center" }}>
-              <strong>{d.toLocaleDateString(undefined, { weekday: "short" })}</strong>
+            <div key={d.toDateString()} style={{ textAlign: "center" }}>
+              <strong>
+                {d.toLocaleDateString(undefined, { weekday: "short" })}
+              </strong>
               <div style={{ opacity: 0.6 }}>{d.getDate()}</div>
             </div>
           ))}
 
           {Array.from({ length: 24 }).map((_, hour) => (
-            <>
-              <div key={`h-${hour}`} style={{ fontSize: 12, opacity: 0.6 }}>
+            <div key={`hour-${hour}`} style={{ display: "contents" }}>
+              <div style={{ fontSize: 12, opacity: 0.6 }}>
                 {hour}:00
               </div>
 
               {weekDays.map((d) => {
                 const dateStr = toLocalDateString(d);
-                const dayEvents = expandRecurringEvents(dateStr).filter(
-                  (e) => e.start_time?.startsWith(String(hour).padStart(2, "0"))
-                );
 
                 return (
                   <div
@@ -193,27 +265,41 @@ export default function Calendar() {
                     style={{
                       border: "1px solid var(--border)",
                       minHeight: 40,
-                      padding: 2,
+                      position: "relative",
                     }}
                   >
-                    {dayEvents.map((e) => (
-                      <div
-                        key={e.id}
-                        style={{
-                          background: e.color,
-                          color: "#fff",
-                          borderRadius: 4,
-                          padding: "2px 4px",
-                          fontSize: 11,
-                        }}
-                      >
-                        {e.title}
-                      </div>
-                    ))}
+                    {eventsForDate(dateStr)
+                      .filter(
+                        (e) =>
+                          e.start_time &&
+                          parseInt(e.start_time.split(":")[0]) === hour
+                      )
+                      .map((e) => (
+                        <div
+                          key={e.id}
+                          style={{
+                            position: "absolute",
+                            top: 2,
+                            left: 2,
+                            right: 2,
+                            height: Math.max(
+                              30,
+                              ((e.duration_minutes || 30) / 60) * 40
+                            ),
+                            background: e.color,
+                            color: "#fff",
+                            fontSize: 11,
+                            borderRadius: 6,
+                            padding: 4,
+                          }}
+                        >
+                          {e.title}
+                        </div>
+                      ))}
                   </div>
                 );
               })}
-            </>
+            </div>
           ))}
         </div>
       )}

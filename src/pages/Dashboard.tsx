@@ -23,109 +23,78 @@ export default function Dashboard({ theme, setTheme }: DashboardProps) {
     setLoading(false);
   }
 
-  function QuickCard({
-    title,
-    description,
-    path,
-  }: {
-    title: string;
-    description: string;
-    path: string;
-  }) {
-    return (
-      <div
-        className="card"
-        onClick={() => navigate(path)}
-        style={{ cursor: "pointer" }}
-      >
-        <div className="card-header">
-          <h2>{title}</h2>
-        </div>
-        <div className="card-body">
-          <p>{description}</p>
-          <button onClick={() => navigate(path)}>Open</button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard-container">
-      {/* HEADER */}
-      <header className="dashboard-header">
-        <div>
-          <h1>Dashboard</h1>
-          <p className="dashboard-subtitle">
-            Your second brain, at a glance.
-          </p>
-        </div>
-
-        <div className="dashboard-actions">
-          <ThemePicker theme={theme} setTheme={setTheme} />
-          <button onClick={signOut} disabled={loading}>
-            {loading ? "Signing out…" : "Log out"}
-          </button>
-        </div>
-      </header>
-
-      {/* TODAY */}
-      <div className="card">
-        <div className="card-header">
-          <h2>Today</h2>
-        </div>
-        <div className="card-body">
-          <Today />
-        </div>
-      </div>
-
-      {/* QUICK ACCESS */}
-      <div className="dashboard-grid">
-        {/* LEFT COLUMN */}
-        <div>
-          <div className="card">
-            <div className="card-header">
-              <h2>Reflection</h2>
-            </div>
-            <div className="card-body">
-              <Reflection />
-            </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        {/* HEADER */}
+        <header className="dashboard-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p className="dashboard-subtitle">
+              Your second brain, at a glance.
+            </p>
           </div>
 
-          <div className="card">
-            <div className="card-header">
-              <h2>Stats</h2>
+          <div className="dashboard-actions">
+            <ThemePicker theme={theme} setTheme={setTheme} />
+            <button onClick={signOut} disabled={loading}>
+              {loading ? "Signing out…" : "Log out"}
+            </button>
+          </div>
+        </header>
+
+        {/* TODAY */}
+        <div className="card">
+          <h2>Today</h2>
+          <Today />
+        </div>
+
+        {/* GRID */}
+        <div className="dashboard-grid">
+          <div>
+            <div className="card">
+              <h2>Reflection</h2>
+              <Reflection />
             </div>
-            <div className="card-body">
+
+            <div className="card">
+              <h2>Stats</h2>
               <Stats />
             </div>
           </div>
-        </div>
 
-        {/* RIGHT COLUMN */}
-        <div>
-          <QuickCard
-            title="Notes"
-            description="Create and edit your notes."
-            path="/notes"
-          />
+          <div>
+            <div className="card">
+              <h2>Notes</h2>
+              <button onClick={() => navigate("/notes")}>Open Notes</button>
+            </div>
 
-          <QuickCard
-            title="Calendar"
-            description="View upcoming events and schedules."
-            path="/calendar"
-          />
+            <div className="card">
+              <h2>Calendar</h2>
+              <button onClick={() => navigate("/calendar")}>
+                Open Calendar
+              </button>
+            </div>
 
-          <QuickCard
-            title="Wiki"
-            description="Your personal knowledge base."
-            path="/wiki"
-          />
+            <div className="card">
+              <h2>Wiki</h2>
+              <button onClick={() => navigate("/wiki")}>Open Wiki</button>
+            </div>
 
-          <QuickCard
-            title="Media"
-            description="Books, films, shows, and more."
-            path="/media"
-          />
+            <div className="card">
+              <h2>Health</h2>
+              <button onClick={() => navigate("/health")}>
+                Open Health
+              </button>
+            </div>
+
+            <div className="card">
+              <h2>Media</h2>
+              <button onClick={() => navigate("/media")}>
+                Open Media
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

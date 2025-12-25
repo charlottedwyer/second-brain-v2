@@ -1,9 +1,18 @@
-import { Navigate } from "react-router-dom";
+import Habits from "./Habits";
 
-/**
- * Legacy route.
- * Habits now live inside the Health page.
- */
-export default function Habits() {
-  return <Navigate to="/health" replace />;
+export default function HabitsPage() {
+  return (
+    <div className="page-container">
+      <header className="page-header">
+        <div>
+          <h1>Habits</h1>
+          <p className="page-subtitle">
+            Build routines and track daily consistency.
+          </p>
+        </div>
+      </header>
+
+      <Habits />
+    </div>
+  );
 }

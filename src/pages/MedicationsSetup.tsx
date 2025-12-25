@@ -5,17 +5,28 @@ export default function MedicationsSetup() {
   const [name, setName] = useState("");
   const [dosage, setDosage] = useState("");
   const [times, setTimes] = useState<string[]>(["08:00"]);
+  const [loading, setLoading] = useState(false);
 
   async function addMedication() {
     if (!name.trim()) return;
 
-    await supabase.from("medications").insert([
+    setLoading(true);
+
+    const { error } = await supabase.from("medications").insert([
       {
         name,
         dosage,
         times,
       },
     ]);
+
+    setLoading(false);
+
+    if (error) {
+      console.error("Medication insert failed:", error);
+      alert(error.message);
+      return;
+    }
 
     setName("");
     setDosage("");
@@ -24,13 +35,20 @@ export default function MedicationsSetup() {
   }
 
   function updateTime(index: number, value: string) {
-    setTimes((t) => t.map((x, i) => (i === index ? value : x)));
+    setTimes((prev) =>
+      prev.map((t, i) => (i === index ? value : t))
+    );
   }
 
   return (
     <div className="page-container">
       <header className="page-header">
-        <h1>Add medication</h1>
+        <div>
+          <h1>Add medication</h1>
+          <p className="page-subtitle">
+            Set up medications once, then track them daily.
+          </p>
+        </div>
       </header>
 
       <div className="card">
@@ -48,6 +66,7 @@ export default function MedicationsSetup() {
           />
 
           <h3>Times</h3>
+
           {times.map((t, i) => (
             <input
               key={i}
@@ -59,12 +78,14 @@ export default function MedicationsSetup() {
 
           <button
             className="secondary"
-            onClick={() => setTimes([...times, "12:00"])}
+            onClick={() => setTimes((t) => [...t, "12:00"])}
           >
-            Add time
+            Add another time
           </button>
 
-          <button onClick={addMedication}>Save medication</button>
+          <button onClick={addMedication} disabled={loading}>
+            {loading ? "Saving…" : "Save medication"}
+          </button>
         </div>
       </div>
     </div>

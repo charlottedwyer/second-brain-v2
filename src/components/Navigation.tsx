@@ -1,45 +1,58 @@
 import { NavLink } from "react-router-dom";
 
-const linkStyle = ({ isActive }: { isActive: boolean }) => ({
-  padding: "8px 12px",
-  borderRadius: 8,
-  textDecoration: "none",
-  color: "var(--text)",
-  background: isActive ? "var(--border)" : "transparent",
-});
-
 export default function Navigation() {
+  const links = [
+    { to: "/", label: "Dashboard" },
+    { to: "/notes", label: "Notes" },
+    { to: "/calendar", label: "Calendar" },
+    { to: "/wiki", label: "Wiki" },
+    { to: "/health", label: "Health" },
+    { to: "/media", label: "Media" },
+  ];
+
   return (
-    <nav
-      style={{
-        display: "flex",
-        gap: 8,
-        padding: 12,
-        borderBottom: "1px solid var(--border)",
-        flexWrap: "wrap",
-      }}
-    >
-      <NavLink to="/" style={linkStyle}>
-        Dashboard
-      </NavLink>
-      <NavLink to="/notes" style={linkStyle}>
-        Notes
-      </NavLink>
-      <NavLink to="/calendar" style={linkStyle}>
-        Calendar
-      </NavLink>
-      <NavLink to="/wiki" style={linkStyle}>
-        Wiki
-      </NavLink>
-      <NavLink to="/health" style={linkStyle}>
-        Health
-      </NavLink>
-      <NavLink to="/media" style={linkStyle}>
-        Media
-      </NavLink>
-      <NavLink to="/stats" style={linkStyle}>
-        Stats
-      </NavLink>
-    </nav>
+    <>
+      {/* DESKTOP NAV */}
+      <nav
+        style={{
+          display: "flex",
+          gap: 16,
+          padding: "12px 24px",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--card)",
+        }}
+      >
+        {links.map((l) => (
+          <NavLink
+            key={l.to}
+            to={l.to}
+            end
+            style={({ isActive }) => ({
+              textDecoration: "none",
+              color: isActive ? "var(--accent)" : "var(--text)",
+              fontWeight: isActive ? 600 : 400,
+            })}
+          >
+            {l.label}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* MOBILE BOTTOM NAV */}
+      <div className="mobile-nav">
+        {links.map((l) => (
+          <NavLink
+            key={l.to}
+            to={l.to}
+            end
+            className={({ isActive }) =>
+              `mobile-nav-item ${isActive ? "active" : ""}`
+            }
+          >
+            {l.label}
+          </NavLink>
+        ))}
+      </div>
+    </>
   );
 }

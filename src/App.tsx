@@ -12,6 +12,8 @@ import Stats from "./pages/Stats";
 import Navigation from "./components/Navigation";
 import MobileNav from "./components/MobileNav";
 
+import MedicationsSetup from "./pages/MedicationsSetup";
+
 export default function App() {
   const [theme, setTheme] = useState("light");
 
@@ -30,6 +32,8 @@ export default function App() {
         <Route path="/health" element={<Health />} />
         <Route path="/media" element={<Media />} />
         <Route path="/stats" element={<Stats />} />
+
+        <Route path="/medications" element={<MedicationsSetup />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

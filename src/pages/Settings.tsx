@@ -22,74 +22,172 @@ export default function Settings({
         margin: "0 auto",
       }}
     >
-      <h1 style={{ fontSize: 28, marginBottom: 24 }}>
+      <h1 style={{ fontSize: 28, marginBottom: 32 }}>
         Settings
       </h1>
 
-      {/* APPEARANCE */}
-      <section style={{ marginBottom: 40 }}>
+      {/* ================= ACCOUNT ================= */}
+      <section style={{ marginBottom: 48 }}>
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>
+          Account
+        </h2>
+
+        <div className="card">
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                fontSize: 13,
+                opacity: 0.7,
+                display: "block",
+                marginBottom: 4,
+              }}
+            >
+              Display name
+            </label>
+            <input
+              type="text"
+              placeholder="Your name"
+              disabled
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label
+              style={{
+                fontSize: 13,
+                opacity: 0.7,
+                display: "block",
+                marginBottom: 4,
+              }}
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              placeholder="email@example.com"
+              disabled
+            />
+          </div>
+
+          <p
+            style={{
+              fontSize: 13,
+              opacity: 0.6,
+              margin: 0,
+            }}
+          >
+            Account details will be editable once authentication
+            is enabled.
+          </p>
+        </div>
+      </section>
+
+      {/* ================= APPEARANCE ================= */}
+      <section style={{ marginBottom: 48 }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>
           Appearance
         </h2>
 
-        {/* MODE */}
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ fontWeight: "bold" }}>
-            Mode
-          </label>
-          <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-            <ModeButton
-              active={mode === "light"}
-              onClick={() => setMode("light")}
+        <div className="card">
+          {/* MODE */}
+          <div style={{ marginBottom: 24 }}>
+            <label
+              style={{
+                fontSize: 13,
+                opacity: 0.7,
+                display: "block",
+                marginBottom: 6,
+              }}
             >
-              Light
-            </ModeButton>
-            <ModeButton
-              active={mode === "dark"}
-              onClick={() => setMode("dark")}
-            >
-              Dark
-            </ModeButton>
+              Mode
+            </label>
+            <div style={{ display: "flex", gap: 10 }}>
+              <ModeButton
+                active={mode === "light"}
+                onClick={() => setMode("light")}
+              >
+                Light
+              </ModeButton>
+              <ModeButton
+                active={mode === "dark"}
+                onClick={() => setMode("dark")}
+              >
+                Dark
+              </ModeButton>
+            </div>
           </div>
-        </div>
 
-        {/* PALETTE */}
-        <div>
-          <label style={{ fontWeight: "bold" }}>
-            Colour palette
-          </label>
-          <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-            <PaletteButton
-              label="Lavender"
-              active={palette === "lavender"}
-              onClick={() => setPalette("lavender")}
-            />
-            <PaletteButton
-              label="Forest"
-              active={palette === "forest"}
-              onClick={() => setPalette("forest")}
-            />
-            <PaletteButton
-              label="Noir"
-              active={palette === "noir"}
-              onClick={() => setPalette("noir")}
-            />
+          {/* PALETTE */}
+          <div>
+            <label
+              style={{
+                fontSize: 13,
+                opacity: 0.7,
+                display: "block",
+                marginBottom: 6,
+              }}
+            >
+              Colour palette
+            </label>
+            <div style={{ display: "flex", gap: 12 }}>
+              <PaletteButton
+                label="Lavender"
+                active={palette === "lavender"}
+                onClick={() => setPalette("lavender")}
+              />
+              <PaletteButton
+                label="Forest"
+                active={palette === "forest"}
+                onClick={() => setPalette("forest")}
+              />
+              <PaletteButton
+                label="Noir"
+                active={palette === "noir"}
+                onClick={() => setPalette("noir")}
+              />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FUTURE */}
-      <section style={{ opacity: 0.6 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-          More settings
+      {/* ================= DANGER ================= */}
+      <section>
+        <h2
+          style={{
+            fontSize: 18,
+            marginBottom: 12,
+            color: "var(--muted)",
+          }}
+        >
+          Advanced
         </h2>
-        <p>Coming soon.</p>
+
+        <div className="card">
+          <button
+            className="secondary"
+            disabled
+            style={{ width: "100%" }}
+          >
+            Sign out
+          </button>
+
+          <p
+            style={{
+              fontSize: 13,
+              opacity: 0.6,
+              marginTop: 12,
+            }}
+          >
+            Sign-out and account actions will be available once
+            authentication is connected.
+          </p>
+        </div>
       </section>
     </div>
   );
 }
 
-/* ---------------- UI ---------------- */
+/* ================= UI ================= */
 
 function ModeButton({
   active,
@@ -106,9 +204,11 @@ function ModeButton({
       style={{
         padding: "6px 14px",
         borderRadius: 999,
-        border: active ? "2px solid #7c6cff" : "1px solid #ccc",
+        border: active
+          ? "2px solid var(--accent)"
+          : "1px solid var(--border)",
         background: active
-          ? "rgba(160,120,255,0.15)"
+          ? "var(--accent-soft)"
           : "transparent",
         cursor: "pointer",
       }}
@@ -133,9 +233,11 @@ function PaletteButton({
       style={{
         padding: "8px 14px",
         borderRadius: 12,
-        border: active ? "2px solid #7c6cff" : "1px solid #ccc",
+        border: active
+          ? "2px solid var(--accent)"
+          : "1px solid var(--border)",
         background: active
-          ? "rgba(160,120,255,0.15)"
+          ? "var(--accent-soft)"
           : "transparent",
         cursor: "pointer",
       }}

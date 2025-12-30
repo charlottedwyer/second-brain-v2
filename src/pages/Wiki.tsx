@@ -30,24 +30,24 @@ export default function Wiki() {
   const [parentId, setParentId] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
-  const [readMode, setReadMode] = useState(false);
+  const [readMode, setReadMode] = useState(true);
 
-  /* ----------------------------- DATA LOAD ----------------------------- */
+  /* ----------------------------- LOAD -------------------------------- */
 
   async function loadPages() {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("wiki_pages")
       .select("*")
       .order("title");
 
-    if (!error && data) setPages(data as WikiPage[]);
+    if (data) setPages(data as WikiPage[]);
   }
 
   useEffect(() => {
     loadPages();
   }, []);
 
-  /* ----------------------------- SELECTION ------------------------------ */
+  /* --------------------------- SELECTION ------------------------------ */
 
   function selectPage(page: WikiPage) {
     setSelected(page);
@@ -67,7 +67,7 @@ export default function Wiki() {
     setReadMode(false);
   }
 
-  /* ------------------------------- SAVE -------------------------------- */
+  /* ----------------------------- SAVE -------------------------------- */
 
   async function savePage() {
     if (!title.trim()) return;
@@ -96,7 +96,7 @@ export default function Wiki() {
     resetEditor();
   }
 
-  /* ------------------------------ DELETE ------------------------------- */
+  /* ---------------------------- DELETE ------------------------------- */
 
   async function deletePage() {
     if (!selected) return;
@@ -107,7 +107,7 @@ export default function Wiki() {
     resetEditor();
   }
 
-  /* ----------------------------- TREE ---------------------------------- */
+  /* --------------------------- TREE ---------------------------------- */
 
   const filteredPages = useMemo(() => {
     if (!search.trim()) return pages;
@@ -119,23 +119,34 @@ export default function Wiki() {
     );
   }, [pages, search]);
 
+  function hasChildren(id: string) {
+    return filteredPages.some((p) => p.parent_id === id);
+  }
+
   function renderTree(parent: string | null, depth = 0) {
     return filteredPages
       .filter((p) => p.parent_id === parent)
       .map((page) => (
-        <div key={page.id} style={{ marginLeft: depth * 12 }}>
+        <div key={page.id} style={{ marginLeft: depth * 14 }}>
           <button
             onClick={() => selectPage(page)}
             style={{
               display: "block",
-              textAlign: "left",
               width: "100%",
-              padding: "4px 6px",
-              borderRadius: 4,
+              textAlign: "left",
+              padding: "6px 8px",
+              borderRadius: 6,
+              fontWeight:
+                selected?.id === page.id ? "bold" : "normal",
               background:
-                selected?.id === page.id ? "rgba(160,120,255,0.15)" : "none",
+                selected?.id === page.id
+                  ? "rgba(160,120,255,0.18)"
+                  : "transparent",
+              border: "none",
+              cursor: "pointer",
             }}
           >
+            {hasChildren(page.id) ? "▸ " : "• "}
             {page.title}
           </button>
           {renderTree(page.id, depth + 1)}
@@ -143,7 +154,7 @@ export default function Wiki() {
       ));
   }
 
-  /* --------------------------- BREADCRUMBS ----------------------------- */
+  /* ------------------------ BREADCRUMBS ------------------------------- */
 
   const breadcrumbs = useMemo(() => {
     if (!selected) return [];
@@ -158,7 +169,7 @@ export default function Wiki() {
     return trail;
   }, [selected, pages]);
 
-  /* -------------------------- INTERNAL LINKS ---------------------------- */
+  /* ----------------------- INTERNAL LINKS ----------------------------- */
 
   function handleInternalLink(title: string) {
     const existing = pages.find(
@@ -167,10 +178,7 @@ export default function Wiki() {
 
     if (existing) {
       selectPage(existing);
-      return;
-    }
-
-    if (confirm(`Create page "${title}"?`)) {
+    } else if (confirm(`Create page "${title}"?`)) {
       setTitle(title);
       setContent("");
       setType("Concept");
@@ -180,34 +188,33 @@ export default function Wiki() {
     }
   }
 
-  function renderContentWithLinks(raw: string) {
+  function renderContent(raw: string) {
     const parts = raw.split(/(\[\[.*?\]\])/g);
 
     return parts.map((part, i) => {
       const match = part.match(/^\[\[(.*?)\]\]$/);
       if (!match) return <span key={i}>{part}</span>;
 
-      const linkTitle = match[1];
       return (
         <button
           key={i}
-          onClick={() => handleInternalLink(linkTitle)}
+          onClick={() => handleInternalLink(match[1])}
           style={{
-            color: "#7c6cff",
-            textDecoration: "underline",
             background: "none",
             border: "none",
+            color: "#7c6cff",
             cursor: "pointer",
             padding: 0,
+            textDecoration: "underline",
           }}
         >
-          {linkTitle}
+          {match[1]}
         </button>
       );
     });
   }
 
-  /* ----------------------------- BACKLINKS ----------------------------- */
+  /* -------------------------- BACKLINKS ------------------------------- */
 
   const backlinks = useMemo(() => {
     if (!selected) return [];
@@ -217,57 +224,111 @@ export default function Wiki() {
     );
   }, [pages, selected]);
 
-  /* ------------------------------- UI ---------------------------------- */
+  /* ------------------------------ UI ---------------------------------- */
+
+  const wikiHome = pages.find((p) => p.title === "Wiki Home");
 
   return (
     <div style={{ display: "flex", height: "100%" }}>
       {/* SIDEBAR */}
-      <aside style={{ width: 260, padding: 12, borderRight: "1px solid #ddd" }}>
+      <aside
+        style={{
+          width: 280,
+          padding: 12,
+          borderRight: "1px solid #ddd",
+        }}
+      >
         <input
           placeholder="Search wiki…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ width: "100%", marginBottom: 8 }}
+          style={{ width: "100%", marginBottom: 10 }}
         />
+
+        {wikiHome && (
+          <button
+            onClick={() => selectPage(wikiHome)}
+            style={{
+              fontWeight: "bold",
+              marginBottom: 12,
+              width: "100%",
+            }}
+          >
+            🏠 Wiki Home
+          </button>
+        )}
 
         <button onClick={resetEditor} style={{ marginBottom: 12 }}>
           + New Page
         </button>
 
-        <div>{renderTree(null)}</div>
+        {renderTree(null)}
       </aside>
 
       {/* MAIN */}
-      <main style={{ flex: 1, padding: 16 }}>
-        {selected && breadcrumbs.length > 0 && (
-          <div style={{ marginBottom: 8, opacity: 0.7 }}>
+      <main style={{ flex: 1, padding: 20 }}>
+        {breadcrumbs.length > 0 && (
+          <div style={{ marginBottom: 12, opacity: 0.75 }}>
             {breadcrumbs.map((b, i) => (
               <span key={b.id}>
                 {i > 0 && " › "}
-                {b.title}
+                <button
+                  onClick={() => selectPage(b)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    fontWeight:
+                      b.id === selected?.id ? "bold" : "normal",
+                    color:
+                      b.id === selected?.id
+                        ? "inherit"
+                        : "#7c6cff",
+                  }}
+                >
+                  {b.title}
+                </button>
               </span>
             ))}
           </div>
         )}
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 12,
+          }}
+        >
           <input
             placeholder="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            style={{ flex: 1, fontSize: 18 }}
+            style={{ flex: 1, fontSize: 20 }}
           />
 
           {selected && (
-            <button onClick={() => setReadMode(!readMode)}>
-              {readMode ? "Edit" : "Read"}
+            <button
+              onClick={() => setReadMode(!readMode)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 999,
+                background: readMode ? "#7c6cff" : "#ddd",
+                color: readMode ? "white" : "black",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              {readMode ? "Reading" : "Editing"}
             </button>
           )}
         </div>
 
         {!readMode ? (
           <>
-            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
               <select
                 value={type}
                 onChange={(e) =>
@@ -300,19 +361,17 @@ export default function Wiki() {
 
             <RichTextEditor value={content} onChange={setContent} />
 
-            <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+            <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
               <button onClick={savePage}>Save</button>
               {selected && <button onClick={deletePage}>Delete</button>}
             </div>
           </>
         ) : (
           <>
-            <div style={{ marginBottom: 16 }}>
-              {renderContentWithLinks(content)}
-            </div>
+            <div style={{ lineHeight: 1.6 }}>{renderContent(content)}</div>
 
             {backlinks.length > 0 && (
-              <div style={{ marginTop: 24, opacity: 0.8 }}>
+              <div style={{ marginTop: 28, opacity: 0.8 }}>
                 <strong>Referenced by</strong>
                 <ul>
                   {backlinks.map((b) => (
@@ -322,8 +381,8 @@ export default function Wiki() {
                         style={{
                           background: "none",
                           border: "none",
-                          color: "#7c6cff",
                           cursor: "pointer",
+                          color: "#7c6cff",
                           padding: 0,
                         }}
                       >

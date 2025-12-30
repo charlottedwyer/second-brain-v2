@@ -6,24 +6,24 @@ import { supabase } from "../../lib/supabaseClient";
    ===================== */
 
 type MediaItem = {
-  id: number;
+  id: string;
   title: string;
-  type: string;
+  kind: string;
   rating: number | null;
 };
 
-const MEDIA_TYPES = ["Book", "Film", "Show", "Game", "Other"];
+const MEDIA_KINDS = ["Book", "Film", "Show", "Game", "Other"];
 
 /* =====================
    COMPONENT
    ===================== */
 
-export default function Media() {
+export default function MediaList() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [selected, setSelected] = useState<MediaItem | null>(null);
 
   const [title, setTitle] = useState("");
-  const [type, setType] = useState("Book");
+  const [kind, setKind] = useState("Book");
   const [rating, setRating] = useState<number | null>(null);
 
   const [filter, setFilter] = useState<string>("All");
@@ -33,10 +33,15 @@ export default function Media() {
   }, []);
 
   async function fetchMedia() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("media")
       .select("*")
       .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to fetch media:", error);
+      return;
+    }
 
     if (data) setItems(data);
   }
@@ -44,20 +49,25 @@ export default function Media() {
   async function createItem() {
     if (!title.trim()) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("media")
       .insert([
         {
-          title,
-          type,
+          title: title.trim(),
+          kind,
           rating,
         },
       ])
       .select()
       .single();
 
+    if (error) {
+      console.error("Failed to create media:", error);
+      return;
+    }
+
     if (data) {
-      setItems([data, ...items]);
+      setItems((prev) => [data, ...prev]);
       resetForm();
     }
   }
@@ -65,18 +75,26 @@ export default function Media() {
   async function saveItem() {
     if (!selected) return;
 
-    await supabase
+    const { error } = await supabase
       .from("media")
       .update({
-        title,
-        type,
+        title: title.trim(),
+        kind,
         rating,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", selected.id);
 
+    if (error) {
+      console.error("Failed to update media:", error);
+      return;
+    }
+
     setItems((prev) =>
       prev.map((i) =>
-        i.id === selected.id ? { ...i, title, type, rating } : i
+        i.id === selected.id
+          ? { ...i, title, kind, rating }
+          : i
       )
     );
 
@@ -90,7 +108,15 @@ export default function Media() {
     const confirmDelete = confirm("Delete this media item?");
     if (!confirmDelete) return;
 
-    await supabase.from("media").delete().eq("id", selected.id);
+    const { error } = await supabase
+      .from("media")
+      .delete()
+      .eq("id", selected.id);
+
+    if (error) {
+      console.error("Failed to delete media:", error);
+      return;
+    }
 
     setItems((prev) => prev.filter((i) => i.id !== selected.id));
     setSelected(null);
@@ -99,14 +125,14 @@ export default function Media() {
 
   function resetForm() {
     setTitle("");
-    setType("Book");
+    setKind("Book");
     setRating(null);
   }
 
   const visibleItems =
     filter === "All"
       ? items
-      : items.filter((i) => i.type === filter);
+      : items.filter((i) => i.kind === filter);
 
   return (
     <div className="page-container">
@@ -120,11 +146,14 @@ export default function Media() {
         </div>
 
         <div className="page-actions">
-          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
             <option value="All">All</option>
-            {MEDIA_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            {MEDIA_KINDS.map((k) => (
+              <option key={k} value={k}>
+                {k}
               </option>
             ))}
           </select>
@@ -147,12 +176,12 @@ export default function Media() {
             onClick={() => {
               setSelected(m);
               setTitle(m.title);
-              setType(m.type);
+              setKind(m.kind);
               setRating(m.rating);
             }}
           >
             <strong>{m.title}</strong>
-            <p style={{ opacity: 0.6 }}>{m.type}</p>
+            <p style={{ opacity: 0.6 }}>{m.kind}</p>
             {m.rating !== null && <p>⭐ {m.rating}</p>}
           </div>
         ))}
@@ -171,10 +200,13 @@ export default function Media() {
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          <select value={type} onChange={(e) => setType(e.target.value)}>
-            {MEDIA_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
+          <select
+            value={kind}
+            onChange={(e) => setKind(e.target.value)}
+          >
+            {MEDIA_KINDS.map((k) => (
+              <option key={k} value={k}>
+                {k}
               </option>
             ))}
           </select>
@@ -183,7 +215,7 @@ export default function Media() {
             type="number"
             min={0}
             max={5}
-            step={0.5}
+            step={1}
             placeholder="Rating (0–5)"
             value={rating ?? ""}
             onChange={(e) =>

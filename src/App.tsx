@@ -12,8 +12,7 @@ import Wiki from "./pages/Wiki";
 import Notes from "./pages/Notes";
 import Media from "./features/media/MediaList";
 import Health from "./pages/Health";
-import HealthHabits from "./pages/Routines";
-import HealthMedications from "./pages/HealthMedications";
+import Routines from "./pages/Routines";
 import MedicationsSetup from "./features/medications/MedicationsSetup";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
@@ -66,13 +65,7 @@ export default function App() {
   const inWikiSection = location.pathname.startsWith("/wiki");
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <header
         style={{
           display: "flex",
@@ -161,12 +154,8 @@ export default function App() {
             }}
           >
             <SubNavItem to="/health" label="Overview" end />
-            <SubNavItem to="/health/habits" label="Habits" />
-            <SubNavItem to="/health/medications" label="Medications" />
-            <SubNavItem
-              to="/health/medications/setup"
-              label="Setup"
-            />
+            <SubNavItem to="/health/routines" label="Routines" />
+            <SubNavItem to="/health/medications/setup" label="Medications" />
           </div>
         )}
       </header>
@@ -187,11 +176,7 @@ export default function App() {
           <Route path="/notes" element={<Notes />} />
           <Route path="/media" element={<Media />} />
           <Route path="/health" element={<Health />} />
-          <Route path="/health/habits" element={<HealthHabits />} />
-          <Route
-            path="/health/medications"
-            element={<HealthMedications />}
-          />
+          <Route path="/health/routines" element={<Routines />} />
           <Route
             path="/health/medications/setup"
             element={<MedicationsSetup />}

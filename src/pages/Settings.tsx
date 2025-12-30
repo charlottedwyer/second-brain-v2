@@ -1,9 +1,19 @@
+type ThemeMode = "light" | "dark";
+type ThemePalette = "lavender" | "forest" | "noir";
+
 type SettingsProps = {
-  theme: "light" | "dark";
-  setTheme: (t: string) => void;
+  mode: ThemeMode;
+  palette: ThemePalette;
+  setMode: (m: ThemeMode) => void;
+  setPalette: (p: ThemePalette) => void;
 };
 
-export default function Settings({ theme, setTheme }: SettingsProps) {
+export default function Settings({
+  mode,
+  palette,
+  setMode,
+  setPalette,
+}: SettingsProps) {
   return (
     <div
       style={{
@@ -16,87 +26,121 @@ export default function Settings({ theme, setTheme }: SettingsProps) {
         Settings
       </h1>
 
-      {/* THEME */}
-      <section style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 8 }}>
+      {/* APPEARANCE */}
+      <section style={{ marginBottom: 40 }}>
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>
           Appearance
         </h2>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "center",
-          }}
-        >
+        {/* MODE */}
+        <div style={{ marginBottom: 20 }}>
           <label style={{ fontWeight: "bold" }}>
-            Theme
+            Mode
           </label>
+          <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+            <ModeButton
+              active={mode === "light"}
+              onClick={() => setMode("light")}
+            >
+              Light
+            </ModeButton>
+            <ModeButton
+              active={mode === "dark"}
+              onClick={() => setMode("dark")}
+            >
+              Dark
+            </ModeButton>
+          </div>
+        </div>
 
-          <button
-            onClick={() => setTheme("light")}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 999,
-              border:
-                theme === "light"
-                  ? "2px solid #7c6cff"
-                  : "1px solid #ccc",
-              background:
-                theme === "light"
-                  ? "rgba(160,120,255,0.15)"
-                  : "transparent",
-              cursor: "pointer",
-            }}
-          >
-            Light
-          </button>
-
-          <button
-            onClick={() => setTheme("dark")}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 999,
-              border:
-                theme === "dark"
-                  ? "2px solid #7c6cff"
-                  : "1px solid #ccc",
-              background:
-                theme === "dark"
-                  ? "rgba(160,120,255,0.15)"
-                  : "transparent",
-              cursor: "pointer",
-            }}
-          >
-            Dark
-          </button>
+        {/* PALETTE */}
+        <div>
+          <label style={{ fontWeight: "bold" }}>
+            Colour palette
+          </label>
+          <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+            <PaletteButton
+              label="Lavender"
+              active={palette === "lavender"}
+              onClick={() => setPalette("lavender")}
+            />
+            <PaletteButton
+              label="Forest"
+              active={palette === "forest"}
+              onClick={() => setPalette("forest")}
+            />
+            <PaletteButton
+              label="Noir"
+              active={palette === "noir"}
+              onClick={() => setPalette("noir")}
+            />
+          </div>
         </div>
       </section>
 
-      {/* PLACEHOLDERS FOR FUTURE */}
-      <section style={{ marginBottom: 32, opacity: 0.7 }}>
+      {/* FUTURE */}
+      <section style={{ opacity: 0.6 }}>
         <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-          Account
+          More settings
         </h2>
         <p>Coming soon.</p>
-      </section>
-
-      <section style={{ marginBottom: 32, opacity: 0.7 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-          Data & Export
-        </h2>
-        <p>Coming soon.</p>
-      </section>
-
-      <section style={{ opacity: 0.7 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-          About
-        </h2>
-        <p>
-          Second Brain is your personal system for thinking,
-          remembering, and becoming.
-        </p>
       </section>
     </div>
+  );
+}
+
+/* ---------------- UI ---------------- */
+
+function ModeButton({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "6px 14px",
+        borderRadius: 999,
+        border: active ? "2px solid #7c6cff" : "1px solid #ccc",
+        background: active
+          ? "rgba(160,120,255,0.15)"
+          : "transparent",
+        cursor: "pointer",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PaletteButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "8px 14px",
+        borderRadius: 12,
+        border: active ? "2px solid #7c6cff" : "1px solid #ccc",
+        background: active
+          ? "rgba(160,120,255,0.15)"
+          : "transparent",
+        cursor: "pointer",
+      }}
+    >
+      {label}
+    </button>
   );
 }

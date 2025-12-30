@@ -43,8 +43,9 @@ function getMonthDays(base: Date) {
 
   const days: (Date | null)[] = [];
   for (let i = 0; i < first.getDay(); i++) days.push(null);
-  for (let d = 1; d <= last.getDate(); d++)
+  for (let d = 1; d <= last.getDate(); d++) {
     days.push(new Date(year, month, d));
+  }
 
   return days;
 }
@@ -63,7 +64,6 @@ export default function Calendar() {
 
   const [view, setView] = useState<ViewMode>("month");
   const [anchorDate, setAnchorDate] = useState(today);
-
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -76,34 +76,45 @@ export default function Calendar() {
 
   useEffect(() => {
     fetchEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anchorDate]);
 
   async function fetchEvents() {
     const start = toLocalDateString(addDays(anchorDate, -31));
     const end = toLocalDateString(addDays(anchorDate, 31));
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("calendar_events")
       .select("*")
       .gte("date", start)
       .lte("date", end);
 
+    if (error) {
+      console.error("Failed to fetch calendar events:", error);
+      return;
+    }
+
     if (data) setEvents(data);
   }
 
   async function addEvent() {
-    if (!selectedDate || !title) return;
+    if (!selectedDate || !title.trim()) return;
 
-    await supabase.from("calendar_events").insert([
+    const { error } = await supabase.from("calendar_events").insert([
       {
-        title,
+        title: title.trim(),
         date: selectedDate,
-        start_time: startTime,
-        duration_minutes: duration,
+        start_time: startTime || null,
+        duration_minutes: duration || null,
         recurrence,
         color,
       },
     ]);
+
+    if (error) {
+      console.error("Failed to add event:", error);
+      return;
+    }
 
     setTitle("");
     fetchEvents();
@@ -117,28 +128,24 @@ export default function Calendar() {
     return events.filter((e) => {
       if (e.date === dateStr) return true;
 
-      if (e.recurrence === "daily") return e.date <= dateStr;
+      if (e.recurrence === "daily") {
+        return e.date <= dateStr;
+      }
 
       if (e.recurrence === "weekly") {
         const base = new Date(e.date);
         const target = new Date(dateStr);
-        return base <= target && base.getDay() === target.getDay();
+        return (
+          base <= target &&
+          base.getDay() === target.getDay()
+        );
       }
 
       return false;
     });
   }
 
-  /* =====================
-     MONTH VIEW
-     ===================== */
-
   const monthDays = getMonthDays(anchorDate);
-
-  /* =====================
-     WEEK VIEW
-     ===================== */
-
   const weekDays = getWeekDays(anchorDate);
 
   return (
@@ -162,21 +169,27 @@ export default function Calendar() {
             <option value="agenda">Agenda</option>
           </select>
 
-          <button onClick={() => setAnchorDate(addDays(anchorDate, -7))}>
+          <button
+            className="secondary"
+            onClick={() => setAnchorDate(addDays(anchorDate, -7))}
+          >
             ◀
           </button>
 
-          <strong>{toLocalDateString(anchorDate)}</strong>
+          <strong style={{ fontSize: 14 }}>
+            {toLocalDateString(anchorDate)}
+          </strong>
 
-          <button onClick={() => setAnchorDate(addDays(anchorDate, 7))}>
+          <button
+            className="secondary"
+            onClick={() => setAnchorDate(addDays(anchorDate, 7))}
+          >
             ▶
           </button>
         </div>
       </header>
 
-      {/* =====================
-         MONTH VIEW
-         ===================== */}
+      {/* MONTH VIEW */}
       {view === "month" && (
         <div
           style={{
@@ -197,6 +210,7 @@ export default function Calendar() {
 
             const dateStr = toLocalDateString(d);
             const dayEvents = eventsForDate(dateStr);
+            const isSelected = selectedDate === dateStr;
 
             return (
               <div
@@ -204,13 +218,19 @@ export default function Calendar() {
                 onClick={() => setSelectedDate(dateStr)}
                 style={{
                   border: "1px solid var(--border)",
-                  borderRadius: 10,
+                  borderRadius: 12,
                   padding: 8,
                   minHeight: 80,
                   cursor: "pointer",
+                  background: isSelected
+                    ? "var(--accent-soft)"
+                    : "transparent",
                 }}
               >
-                <div style={{ fontSize: 12 }}>{d.getDate()}</div>
+                <div style={{ fontSize: 12, opacity: 0.7 }}>
+                  {d.getDate()}
+                </div>
+
                 {dayEvents.slice(0, 3).map((e) => (
                   <div
                     key={e.id}
@@ -228,29 +248,33 @@ export default function Calendar() {
         </div>
       )}
 
-      {/* =====================
-         WEEK VIEW
-         ===================== */}
+      {/* WEEK VIEW */}
       {view === "week" && (
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "80px repeat(7, 1fr)",
+            gap: 2,
           }}
         >
           <div />
 
           {weekDays.map((d) => (
-            <div key={d.toDateString()} style={{ textAlign: "center" }}>
+            <div
+              key={d.toDateString()}
+              style={{ textAlign: "center", paddingBottom: 6 }}
+            >
               <strong>
-                {d.toLocaleDateString(undefined, { weekday: "short" })}
+                {d.toLocaleDateString(undefined, {
+                  weekday: "short",
+                })}
               </strong>
               <div style={{ opacity: 0.6 }}>{d.getDate()}</div>
             </div>
           ))}
 
           {Array.from({ length: 24 }).map((_, hour) => (
-            <div key={`hour-${hour}`} style={{ display: "contents" }}>
+            <div key={hour} style={{ display: "contents" }}>
               <div style={{ fontSize: 12, opacity: 0.6 }}>
                 {hour}:00
               </div>
@@ -272,25 +296,28 @@ export default function Calendar() {
                       .filter(
                         (e) =>
                           e.start_time &&
-                          parseInt(e.start_time.split(":")[0]) === hour
+                          parseInt(e.start_time.split(":")[0]) ===
+                            hour
                       )
                       .map((e) => (
                         <div
                           key={e.id}
                           style={{
                             position: "absolute",
-                            top: 2,
-                            left: 2,
-                            right: 2,
+                            top: 4,
+                            left: 4,
+                            right: 4,
                             height: Math.max(
-                              30,
-                              ((e.duration_minutes || 30) / 60) * 40
+                              28,
+                              ((e.duration_minutes || 30) / 60) *
+                                40
                             ),
                             background: e.color,
                             color: "#fff",
                             fontSize: 11,
                             borderRadius: 6,
                             padding: 4,
+                            overflow: "hidden",
                           }}
                         >
                           {e.title}
@@ -304,26 +331,39 @@ export default function Calendar() {
         </div>
       )}
 
-      {/* =====================
-         AGENDA VIEW
-         ===================== */}
+      {/* AGENDA VIEW */}
       {view === "agenda" && (
         <div className="card">
           <div className="card-body">
+            {events.length === 0 && (
+              <p style={{ opacity: 0.6 }}>
+                No upcoming events.
+              </p>
+            )}
+
             {events.map((e) => (
-              <div key={e.id} style={{ marginBottom: 8 }}>
-                <span style={{ color: e.color }}>●</span>{" "}
-                <strong>{e.title}</strong> — {e.date}{" "}
-                {e.start_time && `@ ${e.start_time}`}
+              <div
+                key={e.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 8,
+                }}
+              >
+                <span style={{ color: e.color }}>●</span>
+                <strong>{e.title}</strong>
+                <span style={{ opacity: 0.6 }}>
+                  — {e.date}
+                  {e.start_time && ` @ ${e.start_time}`}
+                </span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* =====================
-         EVENT CREATION
-         ===================== */}
+      {/* EVENT CREATION */}
       {selectedDate && (
         <div className="card">
           <div className="card-header">
@@ -348,12 +388,16 @@ export default function Calendar() {
               min={15}
               step={15}
               value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
+              onChange={(e) =>
+                setDuration(Number(e.target.value) || 30)
+              }
             />
 
             <select
               value={recurrence}
-              onChange={(e) => setRecurrence(e.target.value as Recurrence)}
+              onChange={(e) =>
+                setRecurrence(e.target.value as Recurrence)
+              }
             >
               <option value="none">One-time</option>
               <option value="daily">Daily</option>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import { Routes, Route, NavLink } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
 import Today from "./pages/Today";
@@ -13,7 +13,6 @@ import Settings from "./pages/Settings";
 export default function App() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
-  // 🔑 Adapter to satisfy Dashboard's expected type
   function handleSetTheme(t: string) {
     if (t === "light" || t === "dark") {
       setTheme(t);
@@ -21,70 +20,69 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      <div
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* TOP NAV BAR */}
+      <header
         style={{
-          height: "100vh",
+          height: 56,
           display: "flex",
-          flexDirection: "column",
+          alignItems: "center",
+          padding: "0 20px",
+          gap: 16,
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          flexShrink: 0,
         }}
       >
-        {/* TOP NAV BAR */}
-        <header
-          style={{
-            height: 56,
-            display: "flex",
-            alignItems: "center",
-            padding: "0 20px",
-            gap: 16,
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ fontWeight: "bold", fontSize: 18 }}>
-            Second Brain
-          </div>
+        <div style={{ fontWeight: "bold", fontSize: 18 }}>
+          Second Brain
+        </div>
 
-          <NavItem to="/today" label="Today" />
-          <NavItem to="/" label="Dashboard" end />
-          <NavItem to="/wiki" label="Wiki" />
-          <NavItem to="/notes" label="Notes" />
-          <NavItem to="/media" label="Media" />
-          <NavItem to="/health" label="Health" />
-          <NavItem to="/stats" label="Stats" />
-          <NavItem to="/settings" label="Settings" />
+        <NavItem to="/today" label="Today" />
+        <NavItem to="/" label="Dashboard" end />
+        <NavItem to="/wiki" label="Wiki" />
+        <NavItem to="/notes" label="Notes" />
+        <NavItem to="/media" label="Media" />
+        <NavItem to="/health" label="Health" />
+        <NavItem to="/stats" label="Stats" />
+        <NavItem to="/settings" label="Settings" />
+      </header>
 
-        </header>
-
-        {/* PAGE CONTENT */}
-        <main style={{ flex: 1, overflow: "hidden" }}>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <Dashboard
-                  theme={theme}
-                  setTheme={handleSetTheme}
-                />
-              }
-            />
-            <Route path="/today" element={<Today />} />
-            <Route path="/wiki" element={<Wiki />} />
-            <Route path="/notes" element={<Notes />} />
-            <Route path="/media" element={<Media />} />
-            <Route path="/health" element={<Health />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route
-  path="/settings"
-  element={
-    <Settings theme={theme} setTheme={handleSetTheme} />
-  }
-/>
-
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+      {/* PAGE CONTENT */}
+      <main style={{ flex: 1, overflow: "hidden" }}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Dashboard
+                theme={theme}
+                setTheme={handleSetTheme}
+              />
+            }
+          />
+          <Route path="/today" element={<Today />} />
+          <Route path="/wiki" element={<Wiki />} />
+          <Route path="/notes" element={<Notes />} />
+          <Route path="/media" element={<Media />} />
+          <Route path="/health" element={<Health />} />
+          <Route path="/stats" element={<Stats />} />
+          <Route
+            path="/settings"
+            element={
+              <Settings
+                theme={theme}
+                setTheme={handleSetTheme}
+              />
+            }
+          />
+        </Routes>
+      </main>
+    </div>
   );
 }
 

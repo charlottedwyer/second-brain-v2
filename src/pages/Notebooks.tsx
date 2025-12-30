@@ -20,10 +20,15 @@ export default function Notebooks({ activeNotebook, onSelect }: Props) {
   }, []);
 
   async function fetchNotebooks() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("notebooks")
       .select("*")
       .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Failed to fetch notebooks:", error);
+      return;
+    }
 
     if (data) setNotebooks(data);
   }
@@ -31,14 +36,19 @@ export default function Notebooks({ activeNotebook, onSelect }: Props) {
   async function createNotebook() {
     if (!newName.trim()) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("notebooks")
-      .insert([{ name: newName }])
+      .insert([{ name: newName.trim() }])
       .select()
-      .single();
+      .maybeSingle();
+
+    if (error) {
+      console.error("Failed to create notebook:", error);
+      return;
+    }
 
     if (data) {
-      setNotebooks([...notebooks, data]);
+      setNotebooks((prev) => [...prev, data]);
       setNewName("");
       onSelect(data.id);
     }
@@ -50,7 +60,15 @@ export default function Notebooks({ activeNotebook, onSelect }: Props) {
     );
     if (!confirmDelete) return;
 
-    await supabase.from("notebooks").delete().eq("id", id);
+    const { error } = await supabase
+      .from("notebooks")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Failed to delete notebook:", error);
+      return;
+    }
 
     if (activeNotebook === id) onSelect(null);
     fetchNotebooks();
@@ -80,6 +98,7 @@ export default function Notebooks({ activeNotebook, onSelect }: Props) {
           >
             <span>{nb.name}</span>
             <button
+              className="secondary"
               onClick={(e) => {
                 e.stopPropagation();
                 deleteNotebook(nb.id);

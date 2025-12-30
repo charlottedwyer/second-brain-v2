@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
@@ -7,9 +8,11 @@ import Notes from "./pages/Notes";
 import Media from "./pages/Media";
 import Health from "./pages/Health";
 import Stats from "./pages/Stats";
-import Settings from "./pages/Settings";
 
 export default function App() {
+  // 🔑 RESTORED theme state (required by Dashboard)
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+
   return (
     <BrowserRouter>
       <div
@@ -47,14 +50,18 @@ export default function App() {
         {/* PAGE CONTENT */}
         <main style={{ flex: 1, overflow: "hidden" }}>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route
+              path="/"
+              element={
+                <Dashboard theme={theme} setTheme={setTheme} />
+              }
+            />
             <Route path="/today" element={<Today />} />
             <Route path="/wiki" element={<Wiki />} />
             <Route path="/notes" element={<Notes />} />
             <Route path="/media" element={<Media />} />
             <Route path="/health" element={<Health />} />
             <Route path="/stats" element={<Stats />} />
-            <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
       </div>

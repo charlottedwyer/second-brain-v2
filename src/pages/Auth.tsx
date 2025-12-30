@@ -10,6 +10,8 @@ export default function Auth() {
   const [info, setInfo] = useState<string | null>(null);
 
   async function handleAuth() {
+    if (loading) return;
+
     setLoading(true);
     setError(null);
     setInfo(null);
@@ -47,56 +49,101 @@ export default function Auth() {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 420, margin: "0 auto" }}>
-      <h1 style={{ marginBottom: 12 }}>
-        {isSignUp ? "Sign up" : "Sign in"}
-      </h1>
+    <div
+      className="page-container"
+      style={{
+        maxWidth: 420,
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      <div className="card" style={{ width: "100%" }}>
+        {/* HEADER */}
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ marginBottom: 4 }}>
+            {isSignUp ? "Create account" : "Welcome back"}
+          </h1>
+          <p style={{ opacity: 0.65 }}>
+            {isSignUp
+              ? "Start building your second brain."
+              : "Sign in to continue."}
+          </p>
+        </div>
 
-      <input
-        type="email"
-        placeholder="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{ width: "100%", marginBottom: 8 }}
-      />
+        {/* FORM */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <input
+            type="email"
+            placeholder="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-      <input
-        type="password"
-        placeholder="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{ width: "100%", marginBottom: 12 }}
-      />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-      <button
-        onClick={handleAuth}
-        disabled={loading}
-        style={{ width: "100%" }}
-      >
-        {loading
-          ? "Please wait…"
-          : isSignUp
-          ? "Create account"
-          : "Sign in"}
-      </button>
+          <button onClick={handleAuth} disabled={loading}>
+            {loading
+              ? "Please wait…"
+              : isSignUp
+              ? "Create account"
+              : "Sign in"}
+          </button>
+        </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {info && <p style={{ opacity: 0.8 }}>{info}</p>}
+        {/* MESSAGES */}
+        {error && (
+          <p
+            style={{
+              color: "#ef4444",
+              marginTop: 12,
+              fontSize: 14,
+            }}
+          >
+            {error}
+          </p>
+        )}
 
-      <hr style={{ margin: "16px 0" }} />
+        {info && (
+          <p
+            style={{
+              marginTop: 12,
+              fontSize: 14,
+              opacity: 0.75,
+            }}
+          >
+            {info}
+          </p>
+        )}
 
-      <button
-        onClick={() => {
-          setIsSignUp(!isSignUp);
-          setError(null);
-          setInfo(null);
-        }}
-        style={{ fontSize: 14, width: "100%" }}
-      >
-        {isSignUp
-          ? "Already have an account? Sign in"
-          : "Need an account? Sign up"}
-      </button>
+        {/* TOGGLE */}
+        <div
+          style={{
+            marginTop: 20,
+            paddingTop: 16,
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          <button
+            className="secondary"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setError(null);
+              setInfo(null);
+            }}
+            style={{ width: "100%" }}
+          >
+            {isSignUp
+              ? "Already have an account? Sign in"
+              : "Need an account? Create one"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

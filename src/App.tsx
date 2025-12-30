@@ -14,6 +14,7 @@ import Media from "./pages/Media";
 import Health from "./pages/Health";
 import HealthHabits from "./pages/HealthHabits";
 import HealthMedications from "./pages/HealthMedications";
+import MedicationsSetup from "./pages/MedicationsSetup";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 
@@ -37,7 +38,7 @@ export default function App() {
         flexDirection: "column",
       }}
     >
-      {/* GLOBAL TOP NAV */}
+      {/* GLOBAL + CONTEXT NAV */}
       <header
         style={{
           display: "flex",
@@ -82,9 +83,10 @@ export default function App() {
           >
             <SubNavItem to="/health" label="Overview" end />
             <SubNavItem to="/health/habits" label="Habits" />
+            <SubNavItem to="/health/medications" label="Medications" />
             <SubNavItem
-              to="/health/medications"
-              label="Medications"
+              to="/health/medications/setup"
+              label="Setup"
             />
           </div>
         )}
@@ -110,9 +112,10 @@ export default function App() {
           {/* HEALTH */}
           <Route path="/health" element={<Health />} />
           <Route path="/health/habits" element={<HealthHabits />} />
+          <Route path="/health/medications" element={<HealthMedications />} />
           <Route
-            path="/health/medications"
-            element={<HealthMedications />}
+            path="/health/medications/setup"
+            element={<MedicationsSetup />}
           />
 
           <Route path="/stats" element={<Stats />} />

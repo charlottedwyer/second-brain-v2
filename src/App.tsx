@@ -10,8 +10,14 @@ import Health from "./pages/Health";
 import Stats from "./pages/Stats";
 
 export default function App() {
-  // 🔑 RESTORED theme state (required by Dashboard)
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  // 🔑 Adapter to satisfy Dashboard's expected type
+  function handleSetTheme(t: string) {
+    if (t === "light" || t === "dark") {
+      setTheme(t);
+    }
+  }
 
   return (
     <BrowserRouter>
@@ -53,7 +59,10 @@ export default function App() {
             <Route
               path="/"
               element={
-                <Dashboard theme={theme} setTheme={setTheme} />
+                <Dashboard
+                  theme={theme}
+                  setTheme={handleSetTheme}
+                />
               }
             />
             <Route path="/today" element={<Today />} />

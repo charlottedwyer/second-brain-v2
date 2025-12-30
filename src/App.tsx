@@ -8,6 +8,7 @@ import Notes from "./pages/Notes";
 import Media from "./pages/Media";
 import Health from "./pages/Health";
 import Stats from "./pages/Stats";
+import Settings from "./pages/Settings";
 
 export default function App() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
@@ -51,6 +52,8 @@ export default function App() {
           <NavItem to="/media" label="Media" />
           <NavItem to="/health" label="Health" />
           <NavItem to="/stats" label="Stats" />
+          <NavItem to="/settings" label="Settings" />
+
         </header>
 
         {/* PAGE CONTENT */}
@@ -71,6 +74,13 @@ export default function App() {
             <Route path="/media" element={<Media />} />
             <Route path="/health" element={<Health />} />
             <Route path="/stats" element={<Stats />} />
+            <Route
+  path="/settings"
+  element={
+    <Settings theme={theme} setTheme={handleSetTheme} />
+  }
+/>
+
           </Routes>
         </main>
       </div>

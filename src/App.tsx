@@ -58,14 +58,10 @@ export default function App() {
     };
   });
 
-  /* -------------------- THEME SETTERS -------------------- */
+  /* -------------------- THEME SETTER -------------------- */
 
   function setThemeMode(mode: ThemeMode) {
     setTheme((t) => ({ ...t, mode }));
-  }
-
-  function setThemePalette(palette: ThemePalette) {
-    setTheme((t) => ({ ...t, palette }));
   }
 
   /* -------------------- PERSIST + APPLY -------------------- */

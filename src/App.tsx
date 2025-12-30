@@ -83,6 +83,33 @@ export default function App() {
           <NavItem to="/health" label="Health" />
           <NavItem to="/stats" label="Stats" />
           <NavItem to="/settings" label="Settings" />
+
+          {/* SPACER */}
+          <div style={{ flex: 1 }} />
+
+          {/* THEME TOGGLE */}
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              padding: 4,
+              borderRadius: 999,
+              background: "rgba(160,120,255,0.15)",
+            }}
+          >
+            <ThemeButton
+              active={theme === "light"}
+              onClick={() => handleSetTheme("light")}
+            >
+              ☀️
+            </ThemeButton>
+            <ThemeButton
+              active={theme === "dark"}
+              onClick={() => handleSetTheme("dark")}
+            >
+              🌙
+            </ThemeButton>
+          </div>
         </div>
 
         {/* WIKI SUB NAV */}
@@ -232,5 +259,34 @@ function SubNavItem({
     >
       {label}
     </NavLink>
+  );
+}
+
+function ThemeButton({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        border: "none",
+        background: active
+          ? "rgba(160,120,255,0.35)"
+          : "transparent",
+        borderRadius: "50%",
+        width: 28,
+        height: 28,
+        cursor: "pointer",
+        fontSize: 14,
+      }}
+    >
+      {children}
+    </button>
   );
 }

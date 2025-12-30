@@ -6,16 +6,24 @@ import {
   useLocation,
 } from "react-router-dom";
 
+import { useAuth } from "./lib/AuthProvider";
+
+import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Today from "./pages/Today";
 import Wiki from "./pages/Wiki";
 import Notes from "./pages/Notes";
 import Media from "./features/media/MediaList";
 import Health from "./pages/Health";
-import Routines from "./pages/Routines";
-import MedicationsSetup from "./features/medications/MedicationsSetup";
+import Habits from "./pages/Habits";
+import Calendar from "./pages/Calendar";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
+import MedicationsSetup from "./features/medications/MedicationsSetup";
+
+/* =====================
+   THEME TYPES
+===================== */
 
 type ThemePalette = "lavender" | "forest" | "noir";
 type ThemeMode = "light" | "dark";
@@ -25,8 +33,28 @@ export type ThemeConfig = {
   mode: ThemeMode;
 };
 
+/* =====================
+   APP
+===================== */
+
 export default function App() {
+  const { session, loading } = useAuth();
   const location = useLocation();
+
+  /* ---------- AUTH GATE ---------- */
+  if (loading) {
+    return (
+      <div className="page-container">
+        <p>Loading…</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Auth />;
+  }
+
+  /* ---------- THEME ---------- */
 
   const [theme, setTheme] = useState<ThemeConfig>(() => {
     const stored = localStorage.getItem("theme");
@@ -43,7 +71,6 @@ export default function App() {
         }
       } catch {}
     }
-
     return { palette: "lavender", mode: "dark" };
   });
 
@@ -64,8 +91,17 @@ export default function App() {
   const inHealthSection = location.pathname.startsWith("/health");
   const inWikiSection = location.pathname.startsWith("/wiki");
 
+  /* ---------- UI ---------- */
+
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* HEADER */}
       <header
         style={{
           display: "flex",
@@ -83,9 +119,7 @@ export default function App() {
             gap: 16,
           }}
         >
-          <div style={{ fontWeight: "bold", fontSize: 18 }}>
-            Second Brain
-          </div>
+          <strong style={{ fontSize: 18 }}>Second Brain</strong>
 
           <NavItem to="/today" label="Today" />
           <NavItem to="/" label="Dashboard" end />
@@ -93,6 +127,7 @@ export default function App() {
           <NavItem to="/notes" label="Notes" />
           <NavItem to="/media" label="Media" />
           <NavItem to="/health" label="Health" />
+          <NavItem to="/calendar" label="Calendar" />
           <NavItem to="/stats" label="Stats" />
           <NavItem to="/settings" label="Settings" />
 
@@ -123,64 +158,37 @@ export default function App() {
         </div>
 
         {inWikiSection && (
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              padding: "6px 20px 10px",
-              background: "var(--accent-soft)",
-            }}
-          >
+          <SubNav>
             <SubNavItem to="/wiki" label="All Pages" end />
-            <span
-              style={{
-                opacity: 0.6,
-                fontSize: 13,
-                alignSelf: "center",
-              }}
-            >
-              Use the sidebar to navigate structure
-            </span>
-          </div>
+          </SubNav>
         )}
 
         {inHealthSection && (
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              padding: "6px 20px 10px",
-              background: "var(--accent-soft)",
-            }}
-          >
+          <SubNav>
             <SubNavItem to="/health" label="Overview" end />
-            <SubNavItem to="/health/routines" label="Routines" />
+            <SubNavItem to="/health/habits" label="Habits" />
             <SubNavItem to="/health/medications/setup" label="Medications" />
-          </div>
+          </SubNav>
         )}
       </header>
 
+      {/* MAIN */}
       <main style={{ flex: 1, overflow: "hidden" }}>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <Dashboard
-                theme={theme.mode}
-                setTheme={(t) => setThemeMode(t as ThemeMode)}
-              />
-            }
-          />
+          <Route path="/" element={<Dashboard theme={""} setTheme={function (): void {
+            throw new Error("Function not implemented.");
+          } } />} />
           <Route path="/today" element={<Today />} />
           <Route path="/wiki" element={<Wiki />} />
           <Route path="/notes" element={<Notes />} />
           <Route path="/media" element={<Media />} />
           <Route path="/health" element={<Health />} />
-          <Route path="/health/routines" element={<Routines />} />
+          <Route path="/health/habits" element={<Habits />} />
           <Route
             path="/health/medications/setup"
             element={<MedicationsSetup />}
           />
+          <Route path="/calendar" element={<Calendar />} />
           <Route path="/stats" element={<Stats />} />
           <Route
             path="/settings"
@@ -198,6 +206,10 @@ export default function App() {
     </div>
   );
 }
+
+/* =====================
+   SMALL UI HELPERS
+===================== */
 
 function NavItem({
   to,
@@ -225,6 +237,21 @@ function NavItem({
     >
       {label}
     </NavLink>
+  );
+}
+
+function SubNav({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 12,
+        padding: "6px 20px 10px",
+        background: "var(--accent-soft)",
+      }}
+    >
+      {children}
+    </div>
   );
 }
 

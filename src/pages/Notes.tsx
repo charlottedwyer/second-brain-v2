@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import NotesInNotebook from "./NotesInNotebook";
+import NotesInNotebook from "../features/notes/NotesInNotebook";
 
 type Notebook = {
   id: string;

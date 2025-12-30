@@ -10,11 +10,11 @@ import Dashboard from "./pages/Dashboard";
 import Today from "./pages/Today";
 import Wiki from "./pages/Wiki";
 import Notes from "./pages/Notes";
-import Media from "./pages/Media";
+import Media from "./features/media/MediaList";
 import Health from "./pages/Health";
-import HealthHabits from "./pages/RoutinesPage";
+import HealthHabits from "./pages/Routines";
 import HealthMedications from "./pages/HealthMedications";
-import MedicationsSetup from "./pages/MedicationsSetup";
+import MedicationsSetup from "./features/medications/MedicationsSetup";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 

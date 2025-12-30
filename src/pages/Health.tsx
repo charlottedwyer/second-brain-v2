@@ -1,5 +1,5 @@
-import Habits from "./HabitsPage";
-import Medications from "./Medications";
+import Habits from "./Habits";
+import Medications from "../features/medications/MedicationsList";
 
 export default function Health() {
   return (

@@ -1,13 +1,13 @@
-import HabitsList from "../components/HabitsList";
+import HabitsList from "../features/habits/HabitsList";
 
-export default function RoutinesPage() {
+export default function HabitsPage() {
   return (
     <div className="page-container">
       <header className="page-header">
         <div>
-          <h1>Routines</h1>
+          <h1>Habits</h1>
           <p className="page-subtitle">
-            Daily habits that support your health and wellbeing.
+            Build routines and track daily consistency.
           </p>
         </div>
       </header>

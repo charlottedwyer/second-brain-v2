@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import RichTextEditor from "../components/RichTextEditor";
+import { supabase } from "../../lib/supabaseClient";
+import RichTextEditor from "../../components/RichTextEditor";
 
 type Props = {
   notebook: { id: string; name: string };

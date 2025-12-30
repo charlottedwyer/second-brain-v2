@@ -1,10 +1,7 @@
-import { useNavigate } from "react-router-dom";
 import Habits from "./Habits";
 import Medications from "./Medications";
 
 export default function Health() {
-  const navigate = useNavigate();
-
   return (
     <div className="page-container">
       {/* PAGE HEADER */}
@@ -24,13 +21,6 @@ export default function Health() {
         </div>
         <div className="card-body">
           <Habits />
-          <button
-            className="secondary"
-            style={{ marginTop: 12 }}
-            onClick={() => navigate("/habits")}
-          >
-            Set up habits
-          </button>
         </div>
       </div>
 
@@ -41,13 +31,6 @@ export default function Health() {
         </div>
         <div className="card-body">
           <Medications />
-          <button
-            className="secondary"
-            style={{ marginTop: 12 }}
-            onClick={() => navigate("/medications")}
-          >
-            Add medication
-          </button>
         </div>
       </div>
     </div>

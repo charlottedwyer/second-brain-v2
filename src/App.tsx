@@ -42,6 +42,7 @@ export default function App() {
   }, [theme]);
 
   const inHealthSection = location.pathname.startsWith("/health");
+  const inWikiSection = location.pathname.startsWith("/wiki");
 
   return (
     <div
@@ -83,6 +84,29 @@ export default function App() {
           <NavItem to="/stats" label="Stats" />
           <NavItem to="/settings" label="Settings" />
         </div>
+
+        {/* WIKI SUB NAV */}
+        {inWikiSection && (
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              padding: "6px 20px 10px",
+              background: "rgba(160,120,255,0.08)",
+            }}
+          >
+            <SubNavItem to="/wiki" label="All Pages" end />
+            <span
+              style={{
+                opacity: 0.6,
+                fontSize: 13,
+                alignSelf: "center",
+              }}
+            >
+              Use the sidebar to navigate structure
+            </span>
+          </div>
+        )}
 
         {/* HEALTH SUB NAV */}
         {inHealthSection && (

@@ -9,7 +9,7 @@ type Recurrence = "none" | "daily" | "weekly";
 type ViewMode = "month" | "week" | "agenda";
 
 type CalendarEvent = {
-  id: number;
+  id: string; // ✅ FIXED: uuid, not number
   title: string;
   date: string; // YYYY-MM-DD
   start_time: string | null; // HH:MM
@@ -59,7 +59,7 @@ function getWeekDays(base: Date) {
    COMPONENT
    ===================== */
 
-export default function Calendar() {
+export default function CalendarView() {
   const today = new Date();
 
   const [view, setView] = useState<ViewMode>("month");
@@ -336,9 +336,7 @@ export default function Calendar() {
         <div className="card">
           <div className="card-body">
             {events.length === 0 && (
-              <p style={{ opacity: 0.6 }}>
-                No upcoming events.
-              </p>
+              <p style={{ opacity: 0.6 }}>No upcoming events.</p>
             )}
 
             {events.map((e) => (

@@ -18,8 +18,6 @@ import MedicationsSetup from "./pages/MedicationsSetup";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 
-/* -------------------- THEME TYPES -------------------- */
-
 type ThemePalette = "lavender" | "forest" | "noir";
 type ThemeMode = "light" | "dark";
 
@@ -27,8 +25,6 @@ export type ThemeConfig = {
   palette: ThemePalette;
   mode: ThemeMode;
 };
-
-/* -------------------- APP -------------------- */
 
 export default function App() {
   const location = useLocation();
@@ -46,18 +42,11 @@ export default function App() {
         ) {
           return parsed;
         }
-      } catch {
-        // ignore invalid stored theme
-      }
+      } catch {}
     }
 
-    return {
-      palette: "lavender",
-      mode: "dark",
-    };
+    return { palette: "lavender", mode: "dark" };
   });
-
-  /* -------------------- THEME SETTERS -------------------- */
 
   function setThemeMode(mode: ThemeMode) {
     setTheme((t) => ({ ...t, mode }));
@@ -67,15 +56,11 @@ export default function App() {
     setTheme((t) => ({ ...t, palette }));
   }
 
-  /* -------------------- APPLY + PERSIST -------------------- */
-
   useEffect(() => {
     localStorage.setItem("theme", JSON.stringify(theme));
     document.documentElement.dataset.theme = theme.mode;
     document.documentElement.dataset.palette = theme.palette;
   }, [theme]);
-
-  /* -------------------- NAV CONTEXT -------------------- */
 
   const inHealthSection = location.pathname.startsWith("/health");
   const inWikiSection = location.pathname.startsWith("/wiki");
@@ -88,16 +73,14 @@ export default function App() {
         flexDirection: "column",
       }}
     >
-      {/* TOP BAR */}
       <header
         style={{
           display: "flex",
           flexDirection: "column",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid var(--border)",
           flexShrink: 0,
         }}
       >
-        {/* PRIMARY NAV */}
         <div
           style={{
             height: 56,
@@ -122,14 +105,13 @@ export default function App() {
 
           <div style={{ flex: 1 }} />
 
-          {/* MODE TOGGLE */}
           <div
             style={{
               display: "flex",
               gap: 6,
               padding: 4,
               borderRadius: 999,
-              background: "rgba(160,120,255,0.15)",
+              background: "var(--accent-soft)",
             }}
           >
             <ThemeButton
@@ -147,14 +129,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* WIKI SUB NAV */}
         {inWikiSection && (
           <div
             style={{
               display: "flex",
               gap: 12,
               padding: "6px 20px 10px",
-              background: "rgba(160,120,255,0.08)",
+              background: "var(--accent-soft)",
             }}
           >
             <SubNavItem to="/wiki" label="All Pages" end />
@@ -170,14 +151,13 @@ export default function App() {
           </div>
         )}
 
-        {/* HEALTH SUB NAV */}
         {inHealthSection && (
           <div
             style={{
               display: "flex",
               gap: 12,
               padding: "6px 20px 10px",
-              background: "rgba(160,120,255,0.08)",
+              background: "var(--accent-soft)",
             }}
           >
             <SubNavItem to="/health" label="Overview" end />
@@ -191,7 +171,6 @@ export default function App() {
         )}
       </header>
 
-      {/* CONTENT */}
       <main style={{ flex: 1, overflow: "hidden" }}>
         <Routes>
           <Route
@@ -207,8 +186,6 @@ export default function App() {
           <Route path="/wiki" element={<Wiki />} />
           <Route path="/notes" element={<Notes />} />
           <Route path="/media" element={<Media />} />
-
-          {/* HEALTH */}
           <Route path="/health" element={<Health />} />
           <Route path="/health/habits" element={<HealthHabits />} />
           <Route
@@ -219,7 +196,6 @@ export default function App() {
             path="/health/medications/setup"
             element={<MedicationsSetup />}
           />
-
           <Route path="/stats" element={<Stats />} />
           <Route
             path="/settings"
@@ -237,8 +213,6 @@ export default function App() {
     </div>
   );
 }
-
-/* -------------------- NAV COMPONENTS -------------------- */
 
 function NavItem({
   to,
@@ -259,7 +233,7 @@ function NavItem({
         textDecoration: "none",
         fontWeight: isActive ? "bold" : "normal",
         background: isActive
-          ? "rgba(160,120,255,0.22)"
+          ? "var(--accent-soft)"
           : "transparent",
         color: "inherit",
       })}
@@ -289,7 +263,7 @@ function SubNavItem({
         fontSize: 14,
         fontWeight: isActive ? "bold" : "normal",
         background: isActive
-          ? "rgba(160,120,255,0.25)"
+          ? "var(--accent-soft)"
           : "transparent",
         color: "inherit",
       })}
@@ -314,13 +288,14 @@ function ThemeButton({
       style={{
         border: "none",
         background: active
-          ? "rgba(160,120,255,0.35)"
+          ? "var(--accent)"
           : "transparent",
         borderRadius: "50%",
         width: 28,
         height: 28,
         cursor: "pointer",
         fontSize: 14,
+        color: active ? "white" : "inherit",
       }}
     >
       {children}

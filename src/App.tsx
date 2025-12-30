@@ -7,6 +7,8 @@ import Wiki from "./pages/Wiki";
 import Notes from "./pages/Notes";
 import Media from "./pages/Media";
 import Health from "./pages/Health";
+import HealthHabits from "./pages/HealthHabits";
+import HealthMedications from "./pages/HealthMedications";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 
@@ -53,7 +55,6 @@ export default function App() {
         <NavItem to="/settings" label="Settings" />
       </header>
 
-      {/* PAGE CONTENT */}
       <main style={{ flex: 1, overflow: "hidden" }}>
         <Routes>
           <Route
@@ -69,7 +70,15 @@ export default function App() {
           <Route path="/wiki" element={<Wiki />} />
           <Route path="/notes" element={<Notes />} />
           <Route path="/media" element={<Media />} />
+
+          {/* HEALTH */}
           <Route path="/health" element={<Health />} />
+          <Route path="/health/habits" element={<HealthHabits />} />
+          <Route
+            path="/health/medications"
+            element={<HealthMedications />}
+          />
+
           <Route path="/stats" element={<Stats />} />
           <Route
             path="/settings"
@@ -85,8 +94,6 @@ export default function App() {
     </div>
   );
 }
-
-/* -------------------------- NAV ITEM -------------------------- */
 
 function NavItem({
   to,

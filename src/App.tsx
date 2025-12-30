@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Routes,
   Route,
@@ -18,15 +18,28 @@ import MedicationsSetup from "./pages/MedicationsSetup";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 
+type Theme = "light" | "dark";
+
 export default function App() {
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
   const location = useLocation();
+
+  const [theme, setTheme] = useState<Theme>(() => {
+    const stored = localStorage.getItem("theme");
+    return stored === "light" || stored === "dark"
+      ? stored
+      : "dark";
+  });
 
   function handleSetTheme(t: string) {
     if (t === "light" || t === "dark") {
       setTheme(t);
     }
   }
+
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   const inHealthSection = location.pathname.startsWith("/health");
 
@@ -112,7 +125,10 @@ export default function App() {
           {/* HEALTH */}
           <Route path="/health" element={<Health />} />
           <Route path="/health/habits" element={<HealthHabits />} />
-          <Route path="/health/medications" element={<HealthMedications />} />
+          <Route
+            path="/health/medications"
+            element={<HealthMedications />}
+          />
           <Route
             path="/health/medications/setup"
             element={<MedicationsSetup />}

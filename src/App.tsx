@@ -39,7 +39,6 @@ export default function App() {
       try {
         const parsed = JSON.parse(stored);
         if (
-          parsed &&
           (parsed.palette === "lavender" ||
             parsed.palette === "forest" ||
             parsed.palette === "noir") &&
@@ -58,13 +57,17 @@ export default function App() {
     };
   });
 
-  /* -------------------- THEME SETTER -------------------- */
+  /* -------------------- THEME SETTERS -------------------- */
 
   function setThemeMode(mode: ThemeMode) {
     setTheme((t) => ({ ...t, mode }));
   }
 
-  /* -------------------- PERSIST + APPLY -------------------- */
+  function setThemePalette(palette: ThemePalette) {
+    setTheme((t) => ({ ...t, palette }));
+  }
+
+  /* -------------------- APPLY + PERSIST -------------------- */
 
   useEffect(() => {
     localStorage.setItem("theme", JSON.stringify(theme));
@@ -85,7 +88,7 @@ export default function App() {
         flexDirection: "column",
       }}
     >
-      {/* GLOBAL + CONTEXT NAV */}
+      {/* TOP BAR */}
       <header
         style={{
           display: "flex",
@@ -188,7 +191,7 @@ export default function App() {
         )}
       </header>
 
-      {/* PAGE CONTENT */}
+      {/* CONTENT */}
       <main style={{ flex: 1, overflow: "hidden" }}>
         <Routes>
           <Route
@@ -222,8 +225,10 @@ export default function App() {
             path="/settings"
             element={
               <Settings
-                theme={theme.mode}
-                setTheme={(t) => setThemeMode(t as ThemeMode)}
+                mode={theme.mode}
+                palette={theme.palette}
+                setMode={setThemeMode}
+                setPalette={setThemePalette}
               />
             }
           />

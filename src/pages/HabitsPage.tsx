@@ -1,4 +1,4 @@
-import Habits from "./Habits";
+import HabitsList from "../components/HabitsList";
 
 export default function HabitsPage() {
   return (
@@ -12,7 +12,9 @@ export default function HabitsPage() {
         </div>
       </header>
 
-      <Habits />
+      <div className="card">
+        <HabitsList />
+      </div>
     </div>
   );
 }

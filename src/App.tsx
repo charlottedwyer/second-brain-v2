@@ -12,7 +12,7 @@ import Wiki from "./pages/Wiki";
 import Notes from "./pages/Notes";
 import Media from "./pages/Media";
 import Health from "./pages/Health";
-import HealthHabits from "./pages/HealthHabits";
+import HealthHabits from "./pages/RoutinesPage";
 import HealthMedications from "./pages/HealthMedications";
 import MedicationsSetup from "./pages/MedicationsSetup";
 import Stats from "./pages/Stats";

@@ -12,7 +12,10 @@
   --border: #e5e7eb;
 }
 
-/* Dark */
+/* =========================
+   DARK MODE
+   ========================= */
+
 [data-theme="dark"] {
   --bg: #0f1220;
   --card: #171a2b;
@@ -21,6 +24,28 @@
   --accent: #8b90ff;
   --accent-soft: rgba(139, 144, 255, 0.2);
   --border: #2a2e45;
+}
+
+/* =========================
+   PALETTES
+   ========================= */
+
+/* Lavender */
+[data-palette="lavender"] {
+  --accent: #7c83ff;
+  --accent-soft: rgba(124, 131, 255, 0.18);
+}
+
+/* Forest */
+[data-palette="forest"] {
+  --accent: #3fa97a;
+  --accent-soft: rgba(63, 169, 122, 0.18);
+}
+
+/* Noir */
+[data-palette="noir"] {
+  --accent: #e5e7eb;
+  --accent-soft: rgba(229, 231, 235, 0.18);
 }
 
 /* =========================
@@ -125,7 +150,7 @@ select:focus {
 }
 
 /* =========================
-   PAGE LAYOUT (NOTION STYLE)
+   PAGE LAYOUT
    ========================= */
 
 .page-container {
@@ -154,7 +179,7 @@ select:focus {
 }
 
 /* =========================
-   SPLIT LIST / EDITOR
+   SPLIT LAYOUT
    ========================= */
 
 .split-layout {
@@ -195,7 +220,7 @@ select:focus {
   margin-bottom: 8px;
 }
 
-/* fake notebook covers */
+/* Fake notebook covers */
 .cover-0 { background: linear-gradient(135deg, #fde68a, #fca5a5); }
 .cover-1 { background: linear-gradient(135deg, #bfdbfe, #a5b4fc); }
 .cover-2 { background: linear-gradient(135deg, #bbf7d0, #86efac); }
@@ -208,7 +233,7 @@ select:focus {
 }
 
 /* =========================
-   RICH TEXT EDITOR (TIPTAP)
+   RICH TEXT EDITOR
    ========================= */
 
 .ProseMirror {

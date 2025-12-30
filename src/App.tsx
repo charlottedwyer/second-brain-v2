@@ -18,28 +18,65 @@ import MedicationsSetup from "./pages/MedicationsSetup";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 
-type Theme = "light" | "dark";
+/* -------------------- THEME TYPES -------------------- */
+
+type ThemePalette = "lavender" | "forest" | "noir";
+type ThemeMode = "light" | "dark";
+
+export type ThemeConfig = {
+  palette: ThemePalette;
+  mode: ThemeMode;
+};
+
+/* -------------------- APP -------------------- */
 
 export default function App() {
   const location = useLocation();
 
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [theme, setTheme] = useState<ThemeConfig>(() => {
     const stored = localStorage.getItem("theme");
-    return stored === "light" || stored === "dark"
-      ? stored
-      : "dark";
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (
+          parsed &&
+          (parsed.palette === "lavender" ||
+            parsed.palette === "forest" ||
+            parsed.palette === "noir") &&
+          (parsed.mode === "light" || parsed.mode === "dark")
+        ) {
+          return parsed;
+        }
+      } catch {
+        // ignore invalid stored theme
+      }
+    }
+
+    return {
+      palette: "lavender",
+      mode: "dark",
+    };
   });
 
-  function handleSetTheme(t: string) {
-    if (t === "light" || t === "dark") {
-      setTheme(t);
-    }
+  /* -------------------- THEME SETTERS -------------------- */
+
+  function setThemeMode(mode: ThemeMode) {
+    setTheme((t) => ({ ...t, mode }));
   }
 
+  function setThemePalette(palette: ThemePalette) {
+    setTheme((t) => ({ ...t, palette }));
+  }
+
+  /* -------------------- PERSIST + APPLY -------------------- */
+
   useEffect(() => {
-    localStorage.setItem("theme", theme);
-    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("theme", JSON.stringify(theme));
+    document.documentElement.dataset.theme = theme.mode;
+    document.documentElement.dataset.palette = theme.palette;
   }, [theme]);
+
+  /* -------------------- NAV CONTEXT -------------------- */
 
   const inHealthSection = location.pathname.startsWith("/health");
   const inWikiSection = location.pathname.startsWith("/wiki");
@@ -84,10 +121,9 @@ export default function App() {
           <NavItem to="/stats" label="Stats" />
           <NavItem to="/settings" label="Settings" />
 
-          {/* SPACER */}
           <div style={{ flex: 1 }} />
 
-          {/* THEME TOGGLE */}
+          {/* MODE TOGGLE */}
           <div
             style={{
               display: "flex",
@@ -98,14 +134,14 @@ export default function App() {
             }}
           >
             <ThemeButton
-              active={theme === "light"}
-              onClick={() => handleSetTheme("light")}
+              active={theme.mode === "light"}
+              onClick={() => setThemeMode("light")}
             >
               ☀️
             </ThemeButton>
             <ThemeButton
-              active={theme === "dark"}
-              onClick={() => handleSetTheme("dark")}
+              active={theme.mode === "dark"}
+              onClick={() => setThemeMode("dark")}
             >
               🌙
             </ThemeButton>
@@ -163,8 +199,8 @@ export default function App() {
             path="/"
             element={
               <Dashboard
-                theme={theme}
-                setTheme={handleSetTheme}
+                theme={theme.mode}
+                setTheme={(t) => setThemeMode(t as ThemeMode)}
               />
             }
           />
@@ -190,8 +226,8 @@ export default function App() {
             path="/settings"
             element={
               <Settings
-                theme={theme}
-                setTheme={handleSetTheme}
+                theme={theme.mode}
+                setTheme={(t) => setThemeMode(t as ThemeMode)}
               />
             }
           />

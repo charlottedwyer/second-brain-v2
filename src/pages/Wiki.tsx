@@ -30,6 +30,7 @@ export default function Wiki() {
   const [parentId, setParentId] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
+  const [readMode, setReadMode] = useState(false);
 
   /* ----------------------------- DATA LOAD ----------------------------- */
 
@@ -54,6 +55,7 @@ export default function Wiki() {
     setContent(page.content);
     setType(page.type);
     setParentId(page.parent_id);
+    setReadMode(true);
   }
 
   function resetEditor() {
@@ -62,6 +64,7 @@ export default function Wiki() {
     setContent("");
     setType("Concept");
     setParentId(null);
+    setReadMode(false);
   }
 
   /* ------------------------------- SAVE -------------------------------- */
@@ -104,7 +107,7 @@ export default function Wiki() {
     resetEditor();
   }
 
-  /* ----------------------------- TREE LOGIC ----------------------------- */
+  /* ----------------------------- TREE ---------------------------------- */
 
   const filteredPages = useMemo(() => {
     if (!search.trim()) return pages;
@@ -155,6 +158,65 @@ export default function Wiki() {
     return trail;
   }, [selected, pages]);
 
+  /* -------------------------- INTERNAL LINKS ---------------------------- */
+
+  function handleInternalLink(title: string) {
+    const existing = pages.find(
+      (p) => p.title.toLowerCase() === title.toLowerCase()
+    );
+
+    if (existing) {
+      selectPage(existing);
+      return;
+    }
+
+    if (confirm(`Create page "${title}"?`)) {
+      setTitle(title);
+      setContent("");
+      setType("Concept");
+      setParentId(null);
+      setSelected(null);
+      setReadMode(false);
+    }
+  }
+
+  function renderContentWithLinks(raw: string) {
+    const parts = raw.split(/(\[\[.*?\]\])/g);
+
+    return parts.map((part, i) => {
+      const match = part.match(/^\[\[(.*?)\]\]$/);
+      if (!match) return <span key={i}>{part}</span>;
+
+      const linkTitle = match[1];
+      return (
+        <button
+          key={i}
+          onClick={() => handleInternalLink(linkTitle)}
+          style={{
+            color: "#7c6cff",
+            textDecoration: "underline",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+          }}
+        >
+          {linkTitle}
+        </button>
+      );
+    });
+  }
+
+  /* ----------------------------- BACKLINKS ----------------------------- */
+
+  const backlinks = useMemo(() => {
+    if (!selected) return [];
+    const token = `[[${selected.title}]]`;
+    return pages.filter(
+      (p) => p.id !== selected.id && p.content.includes(token)
+    );
+  }, [pages, selected]);
+
   /* ------------------------------- UI ---------------------------------- */
 
   return (
@@ -188,48 +250,92 @@ export default function Wiki() {
           </div>
         )}
 
-        <input
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          style={{ width: "100%", fontSize: 18, marginBottom: 8 }}
-        />
-
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as WikiPageType)}
-          >
-            <option>Concept</option>
-            <option>Lore</option>
-            <option>System</option>
-            <option>Reference</option>
-            <option>Personal</option>
-          </select>
+          <input
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            style={{ flex: 1, fontSize: 18 }}
+          />
 
-          <select
-            value={parentId ?? ""}
-            onChange={(e) =>
-              setParentId(e.target.value || null)
-            }
-          >
-            <option value="">No parent</option>
-            {pages
-              .filter((p) => p.id !== selected?.id)
-              .map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.title}
-                </option>
-              ))}
-          </select>
+          {selected && (
+            <button onClick={() => setReadMode(!readMode)}>
+              {readMode ? "Edit" : "Read"}
+            </button>
+          )}
         </div>
 
-        <RichTextEditor value={content} onChange={setContent} />
+        {!readMode ? (
+          <>
+            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+              <select
+                value={type}
+                onChange={(e) =>
+                  setType(e.target.value as WikiPageType)
+                }
+              >
+                <option>Concept</option>
+                <option>Lore</option>
+                <option>System</option>
+                <option>Reference</option>
+                <option>Personal</option>
+              </select>
 
-        <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-          <button onClick={savePage}>Save</button>
-          {selected && <button onClick={deletePage}>Delete</button>}
-        </div>
+              <select
+                value={parentId ?? ""}
+                onChange={(e) =>
+                  setParentId(e.target.value || null)
+                }
+              >
+                <option value="">No parent</option>
+                {pages
+                  .filter((p) => p.id !== selected?.id)
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <RichTextEditor value={content} onChange={setContent} />
+
+            <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+              <button onClick={savePage}>Save</button>
+              {selected && <button onClick={deletePage}>Delete</button>}
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ marginBottom: 16 }}>
+              {renderContentWithLinks(content)}
+            </div>
+
+            {backlinks.length > 0 && (
+              <div style={{ marginTop: 24, opacity: 0.8 }}>
+                <strong>Referenced by</strong>
+                <ul>
+                  {backlinks.map((b) => (
+                    <li key={b.id}>
+                      <button
+                        onClick={() => selectPage(b)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#7c6cff",
+                          cursor: "pointer",
+                          padding: 0,
+                        }}
+                      >
+                        {b.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
       </main>
     </div>
   );
